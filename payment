@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Officials Engine | Billing</title>
+  <style>
+    :root {
+      --bg: #020913;
+      --panel: #061a2d;
+      --line: rgba(134,188,255,0.32);
+      --text: #f7fbff;
+      --muted: #d9e6f7;
+      --blue: #2478ff;
+      --blue-2: #0f58d9;
+      --green: #57d980;
+      --violet: #9663ff;
+      --danger: #ff6b6b;
+      --shadow: 0 24px 80px rgba(0,0,0,0.44);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(36,120,255,0.18), transparent 36rem),
+        radial-gradient(circle at 86% 88%, rgba(150,99,255,0.14), transparent 28rem),
+        var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid rgba(100,164,255,0.12);
+      background: rgba(2,9,19,0.92);
+      backdrop-filter: blur(10px);
+    }
+    .nav {
+      width: min(100% - 40px, 1220px);
+      margin: auto;
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .logo span { color: var(--blue); }
+    .secure-badge {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.82rem; font-weight: 800; color: var(--muted);
+      padding: 5px 12px; border-radius: 999px;
+      border: 1px solid rgba(87,217,128,0.32);
+      background: rgba(87,217,128,0.08);
+    }
+    .secure-badge::before { content: "🔒"; font-size: 0.75rem; }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 20px;
+    }
+    .payment-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+      width: 100%;
+      max-width: 900px;
+      align-items: start;
+    }
+
+    /* ── CARDS ── */
+    .pay-card {
+      padding: 36px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.42), rgba(3,13,27,0.96)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .pay-card-title { font-size: 1.6rem; font-weight: 900; text-transform: uppercase; margin-bottom: 8px; }
+    .pay-card-title span { color: var(--blue); }
+    .pay-card-sub { color: var(--muted); font-size: 0.93rem; line-height: 1.5; margin-bottom: 28px; }
+
+    /* ── PLAN TOGGLE ── */
+    .plan-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 24px; border: 1px solid rgba(134,188,255,0.28); border-radius: 10px; overflow: hidden; }
+    .plan-toggle-btn {
+      min-height: 44px; border: 0; color: var(--muted);
+      background: rgba(2,9,19,0.5);
+      font: inherit; font-size: 0.9rem; font-weight: 800;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .plan-toggle-btn.active { color: #fff; background: rgba(36,120,255,0.28); }
+
+    /* ── PLAN SELECTOR CARDS ── */
+    .plan-cards { display: grid; gap: 10px; margin-bottom: 28px; }
+    .plan-card {
+      position: relative;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 16px 18px;
+      border: 1px solid rgba(134,188,255,0.22);
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(2,9,19,0.4);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .plan-card.selected { border-color: var(--blue); background: rgba(36,120,255,0.14); }
+    .plan-card-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(134,188,255,0.4); flex-shrink: 0; transition: border-color 0.15s; }
+    .plan-card.selected .plan-card-radio { border-color: var(--blue); background: var(--blue); box-shadow: 0 0 0 3px rgba(36,120,255,0.25); }
+    .plan-card-info { flex: 1; }
+    .plan-card-info strong { display: block; font-size: 0.95rem; font-weight: 900; text-transform: uppercase; }
+    .plan-card-info span { font-size: 0.82rem; color: var(--muted); }
+    .plan-card-price { font-size: 1.2rem; font-weight: 900; white-space: nowrap; }
+    .plan-card-price small { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+    .plan-popular-badge {
+      position: absolute; top: -10px; right: 14px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+      background: linear-gradient(90deg, var(--blue), var(--violet));
+      color: #fff;
+    }
+    .annual-note {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid rgba(87,217,128,0.32);
+      border-radius: 8px;
+      background: rgba(87,217,128,0.08);
+      font-size: 0.85rem; font-weight: 700; color: var(--green);
+      margin-bottom: 24px;
+    }
+
+    /* ── FORM ── */
+    .form-section-title {
+      font-size: 0.78rem; font-weight: 900; text-transform: uppercase;
+      color: var(--muted); letter-spacing: 0.06em;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .form-section-title::after { content: ""; flex: 1; border-top: 1px solid rgba(134,188,255,0.14); }
+
+    .form-group { display: grid; gap: 5px; margin-bottom: 14px; }
+    .form-group label { color: #fff; font-weight: 800; font-size: 0.86rem; }
+    .form-group input, .form-group select {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+      border: 1px solid rgba(134,188,255,0.28);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(2,9,19,0.72);
+      font: inherit; font-size: 0.93rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36,120,255,0.18);
+    }
+    .form-group input.error { border-color: var(--danger); }
+    .form-group input::placeholder { color: rgba(217,230,247,0.4); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+    .field-error { font-size: 0.78rem; color: var(--danger); margin-top: 2px; display: none; }
+    .field-error.show { display: block; }
+
+    /* ── CARD NUMBER VISUAL ── */
+    .card-input-wrapper { position: relative; }
+    .card-input-wrapper input { padding-right: 60px; }
+    .card-brands {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 4px;
+    }
+    .card-brand {
+      width: 30px; height: 20px; border-radius: 4px;
+      background: rgba(134,188,255,0.14);
+      border: 1px solid rgba(134,188,255,0.22);
+      font-size: 0.6rem; font-weight: 900; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── SUBMIT ── */
+    .btn-submit {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, var(--blue), var(--blue-2));
+      box-shadow: 0 14px 30px rgba(36,120,255,0.28);
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 6px;
+    }
+    .btn-submit:hover { opacity: 0.88; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .stripe-note {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 14px; font-size: 0.8rem; color: var(--muted); font-weight: 700;
+    }
+    .stripe-note::before { content: "🔒"; }
+
+    /* ── MESSAGE ── */
+    .message {
+      display: none; padding: 12px 14px; border-radius: 8px;
+      font-weight: 800; font-size: 0.88rem; line-height: 1.4;
+      margin-bottom: 18px;
+    }
+    .message.show { display: block; }
+    .message.error { border: 1px solid rgba(255,107,107,0.45); background: rgba(255,107,107,0.13); color: #ff8a8a; }
+    .message.success { border: 1px solid rgba(87,217,128,0.45); background: rgba(87,217,128,0.13); color: var(--green); }
+
+    /* ── ORDER SUMMARY ── */
+    .order-card {
+      padding: 28px;
+      border: 1px solid rgba(134,188,255,0.22);
+      border-radius: 14px;
+      background: rgba(6,26,45,0.65);
+      position: sticky;
+      top: 100px;
+    }
+    .order-title { font-size: 0.78rem; font-weight: 900; text-transform: uppercase; color: var(--blue); letter-spacing: 0.06em; margin-bottom: 18px; }
+    .order-plan-name { font-size: 1.4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+    .order-plan-name span { color: var(--blue); }
+    .order-billing { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+    .order-line { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1px solid rgba(134,188,255,0.1); font-size: 0.88rem; color: var(--muted); }
+    .order-line strong { color: #fff; }
+    .order-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 0; border-top: 2px solid rgba(134,188,255,0.28); margin-top: 8px; }
+    .order-total span { font-size: 0.9rem; font-weight: 900; text-transform: uppercase; color: var(--muted); }
+    .order-total strong { font-size: 1.7rem; font-weight: 900; }
+    .order-features { margin-top: 20px; display: grid; gap: 8px; }
+    .order-feature { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+    .order-feature::before { content: "✓"; color: var(--green); font-weight: 900; flex-shrink: 0; }
+
+    .trial-note {
+      margin-top: 16px; padding: 12px 14px;
+      border: 1px solid rgba(87,217,128,0.28);
+      border-radius: 8px; background: rgba(87,217,128,0.07);
+      font-size: 0.82rem; color: var(--green); font-weight: 700; line-height: 1.5;
+    }
+    .back-link { margin-top: 20px; font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+    .back-link a { color: var(--blue); }
+    .back-link a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(100,164,255,0.12);
+      background: rgba(2,9,19,0.96);
+      padding: 20px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); margin: 0 10px; font-weight: 700; }
+    footer a:hover { color: var(--blue); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 760px) {
+      .payment-layout { grid-template-columns: 1fr; }
+      .order-card { position: static; }
+      .form-row-3 { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="logo" href="index.html">Officials <span>Engine</span></a>
+    <div class="secure-badge">Secure checkout</div>
+  </div>
+</header>
+
+<main>
+  <div class="payment-layout">
+
+    <!-- Payment form -->
+    <div class="pay-card">
+      <h1 class="pay-card-title">Complete Your <span>Plan</span></h1>
+      <p class="pay-card-sub">You're one step away from smarter officiating assignments.</p>
+
+      <div id="payMessage" class="message"></div>
+
+      <!-- Billing cycle toggle -->
+      <div class="plan-toggle" id="billingToggle">
+        <button class="plan-toggle-btn active" type="button" data-billing="monthly">Monthly</button>
+        <button class="plan-toggle-btn" type="button" data-billing="annual">Annual <span style="color:var(--green);font-size:0.78rem;">Save 20%</span></button>
+      </div>
+
+      <!-- Plan cards -->
+      <div class="plan-cards" id="planCards">
+        <div class="plan-card" data-plan="starter" data-monthly="0" data-annual="0">
+          <div class="plan-card-radio"></div>
+          <div class="plan-card-info">
+            <strong>Starter</strong>
+            <span>1 group · 50 games · 15 officials</span>
+          </div>
+          <div class="plan-card-price">Free</div>
+        </div>
+        <div class="plan-card selected" data-plan="pro" data-monthly="29" data-annual="23">
+          <div class="plan-popular-badge">Popular</div>
+          <div class="plan-card-radio"></div>
+          <div class="plan-card-info">
+            <strong>Pro</strong>
+            <span>Unlimited groups, games &amp; officials</span>
+          </div>
+          <div class="plan-card-price" id="proPrice">$29<small>/mo</small></div>
+        </div>
+        <div class="plan-card" data-plan="org" data-monthly="79" data-annual="63">
+          <div class="plan-card-radio"></div>
+          <div class="plan-card-info">
+            <strong>Organization</strong>
+            <span>Multi-assigner pool &amp; org reporting</span>
+          </div>
+          <div class="plan-card-price" id="orgPrice">$79<small>/mo</small></div>
+        </div>
+      </div>
+
+      <div class="annual-note" id="annualNote" style="display:none;">
+        🎉 Annual billing saves you 20% — that's 2 months free compared to monthly.
+      </div>
+
+      <form id="payForm" novalidate>
+
+        <!-- Cardholder info -->
+        <p class="form-section-title">Cardholder Information</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cardFirstName">First name</label>
+            <input id="cardFirstName" type="text" placeholder="Alex" autocomplete="given-name" />
+            <span class="field-error" id="cardFirstError">Required.</span>
+          </div>
+          <div class="form-group">
+            <label for="cardLastName">Last name</label>
+            <input id="cardLastName" type="text" placeholder="Rivera" autocomplete="family-name" />
+            <span class="field-error" id="cardLastError">Required.</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cardEmail">Email address</label>
+          <input id="cardEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          <span class="field-error" id="cardEmailError">Enter a valid email.</span>
+        </div>
+
+        <!-- Card details -->
+        <p class="form-section-title" style="margin-top:24px;">Card Details</p>
+        <div class="form-group">
+          <label for="cardNumber">Card number</label>
+          <div class="card-input-wrapper">
+            <input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" inputmode="numeric" />
+            <div class="card-brands">
+              <div class="card-brand" id="visaBrand">VISA</div>
+              <div class="card-brand" id="mcBrand">MC</div>
+            </div>
+          </div>
+          <span class="field-error" id="cardNumberError">Enter a valid 16-digit card number.</span>
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="cardExpiry">Expiry</label>
+            <input id="cardExpiry" type="text" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp" inputmode="numeric" />
+            <span class="field-error" id="cardExpiryError">Invalid date.</span>
+          </div>
+          <div class="form-group">
+            <label for="cardCvc">CVC</label>
+            <input id="cardCvc" type="text" placeholder="123" maxlength="4" autocomplete="cc-csc" inputmode="numeric" />
+            <span class="field-error" id="cardCvcError">Required.</span>
+          </div>
+          <div class="form-group">
+            <label for="cardZip">ZIP / Postal</label>
+            <input id="cardZip" type="text" placeholder="32801" maxlength="10" autocomplete="postal-code" inputmode="numeric" />
+            <span class="field-error" id="cardZipError">Required.</span>
+          </div>
+        </div>
+
+        <button class="btn-submit" type="submit" id="paySubmit">Start Free Trial</button>
+        <p class="stripe-note">Payments secured by Stripe. Cancel any time.</p>
+      </form>
+    </div>
+
+    <!-- Order summary -->
+    <aside>
+      <div class="order-card">
+        <p class="order-title">Order Summary</p>
+        <p class="order-plan-name" id="summaryName">Officials Engine <span>Pro</span></p>
+        <p class="order-billing" id="summaryBilling">Billed monthly after trial</p>
+
+        <div class="order-line"><span>Plan</span><strong id="summaryPlanLabel">Pro</strong></div>
+        <div class="order-line"><span>Billing</span><strong id="summaryBillingLabel">Monthly</strong></div>
+        <div class="order-line"><span>14-day trial</span><strong style="color:var(--green);">Free</strong></div>
+
+        <div class="order-total">
+          <span>Due today</span>
+          <strong id="summaryTotal">$0.00</strong>
+        </div>
+
+        <div class="order-features" id="summaryFeatures">
+          <div class="order-feature">Unlimited groups</div>
+          <div class="order-feature">Unlimited games</div>
+          <div class="order-feature">Unlimited officials</div>
+          <div class="order-feature">Auto Assign &amp; export</div>
+          <div class="order-feature">Call-out &amp; reassignment</div>
+          <div class="order-feature">Priority support</div>
+        </div>
+
+        <div class="trial-note" id="trialNote">
+          Your 14-day free trial starts today. You won't be charged until <strong id="trialEnd"></strong>.
+        </div>
+
+        <p class="back-link">← <a href="register.html">Back to registration</a></p>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<footer>
+  <a href="index.html">Home</a>
+  <a href="#">Privacy</a>
+  <a href="#">Terms</a>
+  <span>© 2025 Officials Engine</span>
+</footer>
+
+<script>
+  // ── State ──
+  let billingCycle = "monthly";
+  let selectedPlan = "pro";
+
+  const PLANS = {
+    starter: { name: "Starter", monthly: 0, annual: 0,
+      features: ["1 active group","Up to 50 games","Up to 15 officials","Auto Assign & export"] },
+    pro: { name: "Pro", monthly: 29, annual: 23,
+      features: ["Unlimited groups","Unlimited games","Unlimited officials","Auto Assign & export","Call-out & reassignment","Priority support"] },
+    org: { name: "Organization", monthly: 79, annual: 63,
+      features: ["Everything in Pro","Multiple assigners","Shared official pool","Org-level reporting","Custom branding","Dedicated onboarding"] }
+  };
+
+  // Trial end date
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + 14);
+  document.getElementById("trialEnd").textContent = trialEndDate.toLocaleDateString("en-US", {month:"long",day:"numeric",year:"numeric"});
+
+  // Read plan from URL param
+  const urlPlan = new URLSearchParams(window.location.search).get("plan");
+  if (urlPlan && PLANS[urlPlan]) { selectedPlan = urlPlan; }
+
+  function updateSummary() {
+    const plan  = PLANS[selectedPlan];
+    const price = billingCycle === "annual" ? plan.annual : plan.monthly;
+    const billingLabel = billingCycle === "annual" ? "Annual (billed yearly)" : "Monthly";
+
+    document.getElementById("summaryName").innerHTML    = `Officials Engine <span>${plan.name}</span>`;
+    document.getElementById("summaryPlanLabel").textContent   = plan.name;
+    document.getElementById("summaryBillingLabel").textContent = billingLabel;
+    document.getElementById("summaryTotal").textContent = "$0.00";
+    document.getElementById("summaryBilling").textContent = price === 0
+      ? "Free forever — no billing"
+      : `$${price}/mo billed ${billingCycle === "annual" ? "annually ($"+price*12+"/yr)" : "monthly"} after trial`;
+
+    const featEl = document.getElementById("summaryFeatures");
+    featEl.innerHTML = plan.features.map(f => `<div class="order-feature">${f}</div>`).join("");
+
+    const trialNote = document.getElementById("trialNote");
+    trialNote.style.display = price === 0 ? "none" : "block";
+
+    document.getElementById("paySubmit").textContent = price === 0 ? "Start Free — No Card Needed" : "Start Free Trial";
+
+    // Update plan card prices
+    document.querySelectorAll(".plan-card").forEach(card => {
+      const p    = PLANS[card.dataset.plan];
+      const amt  = billingCycle === "annual" ? p.annual : p.monthly;
+      const priceEl = card.querySelector(".plan-card-price");
+      if (priceEl) {
+        priceEl.innerHTML = amt === 0 ? "Free" : `$${amt}<small>/mo</small>`;
+      }
+    });
+
+    document.getElementById("annualNote").style.display = billingCycle === "annual" ? "flex" : "none";
+  }
+
+  function selectPlan(planKey) {
+    selectedPlan = planKey;
+    document.querySelectorAll(".plan-card").forEach(card => {
+      card.classList.toggle("selected", card.dataset.plan === planKey);
+    });
+    updateSummary();
+  }
+
+  // Plan card clicks
+  document.getElementById("planCards").addEventListener("click", e => {
+    const card = e.target.closest(".plan-card");
+    if (card) selectPlan(card.dataset.plan);
+  });
+
+  // Billing toggle
+  document.getElementById("billingToggle").addEventListener("click", e => {
+    const btn = e.target.closest("[data-billing]");
+    if (!btn) return;
+    billingCycle = btn.dataset.billing;
+    document.querySelectorAll(".plan-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.billing === billingCycle));
+    updateSummary();
+  });
+
+  // Init
+  selectPlan(selectedPlan);
+
+  // ── Card formatting ──
+  const cardNumberEl = document.getElementById("cardNumber");
+  const cardExpiryEl = document.getElementById("cardExpiry");
+  const cardCvcEl    = document.getElementById("cardCvc");
+
+  cardNumberEl.addEventListener("input", () => {
+    let v = cardNumberEl.value.replace(/\D/g,"").slice(0,16);
+    cardNumberEl.value = v.replace(/(.{4})/g,"$1 ").trim();
+    const isVisa = v[0] === "4";
+    const isMC   = ["5","2"].includes(v[0]);
+    document.getElementById("visaBrand").style.background = isVisa ? "rgba(36,120,255,0.35)" : "rgba(134,188,255,0.1)";
+    document.getElementById("mcBrand").style.background   = isMC   ? "rgba(255,107,107,0.35)" : "rgba(134,188,255,0.1)";
+  });
+
+  cardExpiryEl.addEventListener("input", () => {
+    let v = cardExpiryEl.value.replace(/\D/g,"");
+    if (v.length > 2) v = v.slice(0,2) + " / " + v.slice(2,4);
+    cardExpiryEl.value = v;
+  });
+
+  cardCvcEl.addEventListener("input", () => {
+    cardCvcEl.value = cardCvcEl.value.replace(/\D/g,"").slice(0,4);
+  });
+
+  // ── Validation helpers ──
+  function setError(inputEl, errorId, show) {
+    if (inputEl) inputEl.classList.toggle("error", show);
+    const e = document.getElementById(errorId);
+    if (e) e.classList.toggle("show", show);
+  }
+  function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  // Clear errors on input
+  ["cardFirstName","cardLastName","cardEmail","cardNumber","cardExpiry","cardCvc","cardZip"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", () => el.classList.remove("error"));
+  });
+
+  // ── Form submit ──
+  const msgEl   = document.getElementById("payMessage");
+  const submitB = document.getElementById("paySubmit");
+
+  document.getElementById("payForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const plan = PLANS[selectedPlan];
+    const isFree = (billingCycle === "annual" ? plan.annual : plan.monthly) === 0;
+
+    const fn  = document.getElementById("cardFirstName").value.trim();
+    const ln  = document.getElementById("cardLastName").value.trim();
+    const em  = document.getElementById("cardEmail").value.trim();
+    const num = cardNumberEl.value.replace(/\s/g,"");
+    const exp = cardExpiryEl.value;
+    const cvc = cardCvcEl.value;
+    const zip = document.getElementById("cardZip").value.trim();
+
+    let valid = true;
+    if (!fn)  { setError(document.getElementById("cardFirstName"), "cardFirstError", true); valid=false; }
+    if (!ln)  { setError(document.getElementById("cardLastName"),  "cardLastError",  true); valid=false; }
+    if (!validateEmail(em)) { setError(document.getElementById("cardEmail"), "cardEmailError", true); valid=false; }
+
+    if (!isFree) {
+      if (num.length < 13) { setError(cardNumberEl, "cardNumberError", true); valid=false; }
+      if (!exp.includes("/")) { setError(cardExpiryEl, "cardExpiryError", true); valid=false; }
+      if (cvc.length < 3)  { setError(cardCvcEl, "cardCvcError", true); valid=false; }
+      if (!zip)            { setError(document.getElementById("cardZip"), "cardZipError", true); valid=false; }
+    }
+    if (!valid) return;
+
+    submitB.disabled    = true;
+    submitB.textContent = "Processing…";
+
+    await new Promise(r => setTimeout(r, 1400));
+
+    msgEl.className     = "message show success";
+    msgEl.textContent   = `Success! Your ${plan.name} plan is active. Redirecting to your dashboard…`;
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 1200);
+  });
+</script>
+
+</body>
+</html>
