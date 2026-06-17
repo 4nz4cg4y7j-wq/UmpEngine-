@@ -1,1 +1,2798 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Officials Engine | Dashboard</title>
+  <style>
+    :root {
+      --bg: #020913;
+      --panel: #061a2d;
+      --line: rgba(134, 188, 255, 0.32);
+      --text: #f7fbff;
+      --muted: #d9e6f7;
+      --blue: #2478ff;
+      --blue-2: #0f58d9;
+      --green: #57d980;
+      --violet: #9663ff;
+      --danger: #ff6b6b;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.44);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(36,120,255,0.2), transparent 35rem),
+        radial-gradient(circle at 90% 20%, rgba(150,99,255,0.14), transparent 30rem),
+        var(--bg);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
 
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid rgba(100,164,255,0.12);
+      background: rgba(2,9,19,0.92);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav {
+      width: min(100% - 40px, 1220px);
+      min-height: 72px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .logo span { color: var(--blue); }
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 2.4vw, 34px);
+      margin-left: auto;
+      font-weight: 700;
+    }
+    .menu a:hover, .menu a.active { color: var(--blue); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      color: #fff;
+      font-weight: 800;
+      background: linear-gradient(180deg, var(--blue), var(--blue-2));
+      box-shadow: 0 14px 30px rgba(36,120,255,0.25);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn.outline {
+      background: rgba(2,9,19,0.45);
+      border-color: rgba(255,255,255,0.55);
+      box-shadow: none;
+    }
+    .btn.warning {
+      border-color: rgba(255,211,122,0.72);
+      background: linear-gradient(180deg, #f0a431, #b96e08);
+      box-shadow: 0 16px 34px rgba(240,164,49,0.22);
+    }
+    .btn.danger {
+      border-color: rgba(255,107,107,0.6);
+      background: linear-gradient(180deg, #ff6b6b, #c0392b);
+      box-shadow: none;
+    }
+    .btn.ghost {
+      background: rgba(134,188,255,0.08);
+      border-color: rgba(134,188,255,0.22);
+      box-shadow: none;
+    }
+    .btn.sm { min-height: 34px; padding: 0 12px; font-size: 0.84rem; }
+
+    /* ── Layout ── */
+    main {
+      width: min(100% - 40px, 1220px);
+      margin: auto;
+      padding: 36px 0 64px;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Page head ── */
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.08;
+      text-transform: uppercase;
+    }
+    .page-head h1 span { color: var(--blue); }
+    .page-head p { max-width: 680px; margin: 0; color: var(--muted); line-height: 1.5; }
+
+    /* ── Grids ── */
+    .grid { display: grid; gap: 18px; }
+    .metrics { grid-template-columns: repeat(4, 1fr); margin-bottom: 24px; }
+    .dashboard-tools { grid-template-columns: repeat(3, 1fr); }
+    .groups-layout { grid-template-columns: minmax(0,1fr) 300px; align-items: start; }
+    .group-columns { grid-template-columns: repeat(2, 1fr); }
+    .group-home-grid { grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; }
+    .two-column { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .three-column { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+    /* ── Group nav links ── */
+    .group-links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 16px;
+      margin: 22px 0;
+    }
+    .group-link {
+      position: relative;
+      min-height: 88px;
+      padding: 18px 20px;
+      border: 1px solid rgba(134,188,255,0.38);
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(145deg, rgba(36,120,255,0.22), rgba(3,13,27,0.92)), var(--panel);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 18px 46px rgba(0,0,0,0.34);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 180ms ease, border-color 180ms ease;
+    }
+    .group-link strong, .group-link span { position: relative; z-index: 1; display: block; }
+    .group-link strong { margin-bottom: 6px; font-size: 1.1rem; text-transform: uppercase; }
+    .group-link span { color: var(--muted); font-size: 0.9rem; font-weight: 700; line-height: 1.3; }
+    .group-link:hover { transform: translateY(-2px); border-color: rgba(120,190,255,0.8); }
+    .group-link.active { border-color: var(--blue); background: linear-gradient(145deg, rgba(36,120,255,0.48), rgba(15,88,217,0.22)), var(--panel); }
+
+    /* ── Date tabs ── */
+    .date-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .date-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid rgba(134,188,255,0.32);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(2,9,19,0.5);
+      font-weight: 900;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .date-tab.active { border-color: var(--blue); background: rgba(36,120,255,0.22); }
+
+    /* ── Cards ── */
+    .card, .metric, .tool-card, .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.38), rgba(3,13,27,0.92)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .metric { padding: 20px; }
+    .metric strong { display: block; margin-bottom: 6px; color: #fff; font-size: 2.2rem; line-height: 1; }
+    .metric span, .muted { color: var(--muted); }
+    .tool-card, .panel, .card { padding: 22px; }
+    .tool-card { display: grid; gap: 10px; min-height: 130px; cursor: pointer; }
+    .tool-card:hover { border-color: var(--blue); }
+    .tool-card strong, .panel h2, .panel h3, .card h3 { margin: 0; text-transform: uppercase; }
+    .tool-card span, .panel p, .card p { margin: 0; color: var(--muted); line-height: 1.45; }
+
+    /* ── Section title ── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .section-title h2, .section-title h3 { margin: 0; text-transform: uppercase; }
+
+    /* ── Lists ── */
+    .group-list, .item-list { display: grid; gap: 10px; }
+    .group-card, .item-card {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid rgba(134,188,255,0.22);
+      border-radius: 10px;
+      color: #fff;
+      background: rgba(2,9,19,0.55);
+      text-align: left;
+    }
+    button.group-card { cursor: pointer; }
+    button.group-card:hover { border-color: var(--blue); background: rgba(36,120,255,0.16); }
+    .item-card strong, .group-card strong { display: block; margin-bottom: 5px; }
+
+    /* ── Pills ── */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border: 1px solid rgba(87,217,128,0.44);
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(87,217,128,0.1);
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .pill.blue { color: #8fc2ff; border-color: rgba(36,120,255,0.44); background: rgba(36,120,255,0.12); }
+    .pill.red { color: #ff8a8a; border-color: rgba(255,107,107,0.44); background: rgba(255,107,107,0.1); }
+
+    /* ── Inline actions ── */
+    .inline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .inline-actions .btn { min-height: 36px; padding: 0 13px; font-size: 0.88rem; box-shadow: none; }
+
+    /* ── Group command panel ── */
+    .group-command-panel {
+      margin-bottom: 6px;
+      border-color: rgba(134,188,255,0.42);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(36,120,255,0.22), transparent 20rem),
+        linear-gradient(145deg, rgba(22,58,98,0.48), rgba(3,13,27,0.94)), var(--panel);
+    }
+    .command-actions { gap: 12px; margin-bottom: 10px; }
+    .command-actions .btn { min-height: 52px; padding: 0 24px; font-size: 1rem; }
+
+    /* ── Group tab system ── */
+    .group-tab { display: none; }
+    .group-tab.active { display: block; }
+    .group-home-back { margin-bottom: 16px; }
+
+    /* ── Date board ── */
+    .date-board { display: grid; gap: 16px; }
+    .field-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(22,58,98,0.38), rgba(3,13,27,0.92)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .field-card h2 { margin: 0; padding: 12px 16px; color: #fff; background: rgba(36,120,255,0.28); text-transform: uppercase; font-size: 0.95rem; }
+    .field-game { display: grid; gap: 6px; padding: 14px 16px; border-top: 1px solid rgba(134,188,255,0.18); }
+    .field-game strong { color: #fff; }
+    .need-line { color: #ffd37a; font-size: 0.9rem; font-weight: 900; }
+    .shortage-list { display: grid; gap: 6px; margin-top: 8px; padding-left: 16px; }
+    .shortage-list li { color: #fff; line-height: 1.35; }
+
+    /* ── Forms ── */
+    form { display: grid; gap: 13px; }
+    label { display: grid; gap: 6px; color: #fff; font-weight: 800; }
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid rgba(134,188,255,0.28);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(2,9,19,0.72);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select[multiple] { min-height: 110px; padding: 10px 12px; }
+    textarea { min-height: 88px; padding: 12px; resize: vertical; line-height: 1.45; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(36,120,255,0.18);
+    }
+    input[type="range"] { min-height: 26px; padding: 0; accent-color: var(--blue); }
+    input[type="range"]:disabled { cursor: not-allowed; accent-color: #7d8793; }
+
+    /* ── Rating sliders ── */
+    .rating-slider { display: grid; gap: 7px; }
+    .rating-slider span { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .rating-slider output {
+      min-width: 30px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(36,120,255,0.32);
+      text-align: center;
+      font-weight: 900;
+    }
+    .rating-slider.locked { opacity: 0.62; }
+    .rating-slider.locked output { background: rgba(217,230,247,0.18); color: var(--muted); }
+
+    /* ── Role grid ── */
+    .role-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 10px; }
+    .role-grid label { font-size: 0.82rem; }
+
+    /* ── Preference summary ── */
+    .preference-summary { display: grid; gap: 10px; margin-top: 12px; }
+    .preference-question {
+      display: grid;
+      gap: 7px;
+      padding: 12px;
+      border: 1px solid rgba(134,188,255,0.18);
+      border-radius: 10px;
+      background: rgba(2,9,19,0.42);
+    }
+    .preference-question strong { line-height: 1.35; }
+    .preference-section-title { margin: 16px 0 6px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 900; font-size: 0.85rem; }
+
+    /* ── Field & division headings ── */
+    .field-heading {
+      margin: 14px 0 0;
+      padding: 9px 12px;
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(36,120,255,0.14);
+      text-transform: uppercase;
+      font-size: 0.95rem;
+    }
+    .division-heading {
+      margin: 16px 0 4px;
+      padding: 11px 13px;
+      border: 1px solid rgba(87,217,128,0.32);
+      border-radius: 10px;
+      background: rgba(87,217,128,0.1);
+    }
+    .division-heading strong { display: block; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+
+    /* ── Messages ── */
+    .message { display: none; padding: 11px 13px; border-radius: 8px; font-weight: 800; line-height: 1.35; }
+    .message.show { display: block; }
+    .message.success { border: 1px solid rgba(87,217,128,0.45); background: rgba(87,217,128,0.13); }
+    .message.error { border: 1px solid rgba(255,107,107,0.45); background: rgba(255,107,107,0.13); }
+    .empty {
+      padding: 16px;
+      border: 1px dashed rgba(134,188,255,0.28);
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(2,9,19,0.35);
+      line-height: 1.45;
+    }
+
+    /* ── Misc ── */
+    .small { font-size: 0.9rem; line-height: 1.38; }
+
+    /* ── Notification panel ── */
+    .notification-panel {
+      display: none;
+      margin-bottom: 16px;
+      border-color: rgba(255,193,7,0.5);
+      background: linear-gradient(145deg, rgba(255,193,7,0.13), rgba(3,13,27,0.92)), var(--panel);
+    }
+    .notification-panel.show { display: block; }
+    .notification-panel h2 { margin: 0 0 10px; color: #ffd166; }
+    .notification-list { margin: 0; padding-left: 20px; color: #fff; line-height: 1.45; }
+
+    /* ── Modals ── */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,0.7);
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: min(100%, 720px);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.58), rgba(3,13,27,0.98)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .schedule-view-card { width: min(100%, 1180px); }
+    .schedule-view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .schedule-view-head p { margin: 0; color: var(--muted); line-height: 1.4; }
+    .schedule-view-actions { justify-content: flex-start; margin-bottom: 16px; }
+    .schedule-view-content { display: grid; gap: 14px; }
+    .modal-card h2 { margin: 0 0 16px; text-transform: uppercase; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+
+    /* ── Wizard ── */
+    .wizard-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .wizard-step {
+      min-height: 40px;
+      border: 1px solid rgba(134,188,255,0.2);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(2,9,19,0.46);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .wizard-step.active { color: #fff; border-color: rgba(36,120,255,0.7); background: rgba(36,120,255,0.22); }
+    .official-pane { display: none; gap: 14px; }
+    .official-pane.active { display: grid; }
+
+    /* ── Availability builder ── */
+    .availability-builder {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid rgba(134,188,255,0.18);
+      border-radius: 10px;
+      background: rgba(2,9,19,0.36);
+    }
+    .availability-list { display: grid; gap: 7px; }
+    .availability-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border: 1px solid rgba(134,188,255,0.18);
+      border-radius: 8px;
+      background: rgba(2,9,19,0.48);
+      color: var(--muted);
+    }
+
+    /* ── Excel export view ── */
+    .workbook-view { display: grid; gap: 20px; color: #111827; }
+    .sheet-view {
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.28);
+    }
+    .sheet-title { margin: 0 0 10px; padding: 9px 12px; color: #fff; background: #0f58d9; text-align: center; text-transform: uppercase; font-size: 0.95rem; }
+    .excel-table { width: 100%; min-width: 720px; margin-bottom: 12px; border-collapse: collapse; table-layout: fixed; background: #fff; color: #111827; font-size: 0.85rem; }
+    .excel-table th, .excel-table td { border: 1px solid #cbd5e1; padding: 5px 7px; vertical-align: middle; }
+    .excel-field-name th { color: #fff; background: #061a2d; text-align: center; font-weight: 900; text-transform: uppercase; }
+    .excel-header th { color: #fff; background: #2478ff; text-align: left; font-weight: 900; }
+    .excel-game-cell { font-size: 0.72rem; line-height: 1.15; word-break: break-word; }
+    .excel-table select { width: 100%; min-height: 32px; padding: 3px 5px; border: 1px solid #94a3b8; border-radius: 4px; color: #111827; background: #fff; font-size: 0.75rem; }
+    .print-official-name { display: none; }
+    .excel-need-row td { color: #92400e; background: #fff7ed; font-weight: 800; font-size: 0.78rem; }
+    .used-officials-title, .total-sheet-title { color: #fff; background: #061a2d; text-align: center; font-weight: 900; text-transform: uppercase; }
+
+    /* ── Responsive ── */
+    @media (max-width: 980px) {
+      .metrics, .dashboard-tools, .groups-layout, .group-columns,
+      .group-links, .group-home-grid, .role-grid, .two-column, .three-column {
+        grid-template-columns: 1fr;
+      }
+      .nav { flex-direction: column; padding: 16px 0; text-align: center; }
+      .menu { margin-left: 0; flex-wrap: wrap; justify-content: center; }
+      .page-head { flex-direction: column; }
+      .modal-actions { flex-direction: column; }
+    }
+    @media (max-width: 560px) { .btn { width: 100%; } }
+
+    /* ── Print ── */
+    @media print {
+      body.printing-schedule > :not(#scheduleViewModal) { display: none !important; }
+      body.printing-schedule, body.printing-schedule #scheduleViewModal { background: #fff !important; color: #000 !important; }
+      body.printing-schedule #scheduleViewModal { position: static !important; display: block !important; padding: 0 !important; }
+      body.printing-schedule .schedule-view-card { width: 100% !important; max-height: none !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; color: #000 !important; }
+      body.printing-schedule .schedule-view-actions,
+      body.printing-schedule .modal-actions,
+      body.printing-schedule .need-line { display: none !important; }
+      body.printing-schedule .sheet-view { padding: 0 !important; border: 0 !important; box-shadow: none !important; page-break-after: always; }
+      body.printing-schedule .excel-table { min-width: 0 !important; font-size: 9pt !important; }
+      body.printing-schedule .excel-game-cell { font-size: 7pt !important; }
+      body.printing-schedule select { display: none !important; }
+      body.printing-schedule .print-official-name { display: inline !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="logo" href="#dashboard">Officials <span>Engine</span></a>
+    <nav class="menu" aria-label="Dashboard navigation">
+      <a href="#dashboard" data-nav="dashboard">Dashboard</a>
+      <a href="#auto-assign" data-nav="auto-assign">Auto Assign</a>
+      <a href="#groups" data-nav="groups">Groups</a>
+    </nav>
+    <button class="btn outline sm" id="resetButton" type="button">Clear Data</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══ DASHBOARD ══ -->
+  <section class="view active" id="dashboardView">
+    <div class="page-head">
+      <div>
+        <h1>Dashboard <span>Home</span></h1>
+        <p>Static mode — all data is stored locally in your browser. Use Groups to manage games and officials.</p>
+      </div>
+    </div>
+    <section class="grid metrics" aria-label="Dashboard summary">
+      <article class="metric"><strong id="groupCount">0</strong><span>Groups</span></article>
+      <article class="metric"><strong id="gameCount">0</strong><span>Games</span></article>
+      <article class="metric"><strong id="officialsCount">0</strong><span>Officials</span></article>
+      <article class="metric"><strong id="awaitingCount">0</strong><span>Awaiting assignment</span></article>
+    </section>
+    <section class="grid dashboard-tools">
+      <a class="tool-card" href="#groups">
+        <strong>Groups</strong>
+        <span>Create and manage assigning groups. Add officials, schedule games, and run Auto Assign.</span>
+      </a>
+      <a class="tool-card" href="#auto-assign">
+        <strong>Auto Assign Settings</strong>
+        <span>Configure your default assigning preferences used across all groups.</span>
+      </a>
+    </section>
+  </section>
+
+  <!-- ══ AUTO ASSIGN SETTINGS ══ -->
+  <section class="view" id="autoAssignView">
+    <div class="page-head">
+      <div>
+        <h1>Auto <span>Assign</span></h1>
+        <p>Set your default assigning preferences. These apply to all groups unless a group has its own custom settings.</p>
+      </div>
+      <button class="btn" id="openAccountPreferences" type="button">Edit Preferences</button>
+    </div>
+    <section class="panel">
+      <div class="section-title"><h2>Current Preferences</h2></div>
+      <div id="accountPreferenceSummary" class="preference-summary"></div>
+    </section>
+  </section>
+
+  <!-- ══ GROUPS LIST ══ -->
+  <section class="view" id="groupsView">
+    <div class="page-head">
+      <div>
+        <h1>Groups</h1>
+        <p>Create assigning groups for tournaments, leagues, or seasons.</p>
+      </div>
+      <button class="btn" id="openCreateGroup" type="button">+ Create Group</button>
+    </div>
+    <section class="grid groups-layout">
+      <section class="panel">
+        <div class="section-title"><h2>Your Groups</h2></div>
+        <div style="margin-bottom:12px;">
+          <input id="groupSearch" type="search" placeholder="Search groups…" />
+        </div>
+        <div id="createdGroupsList" class="group-list"></div>
+      </section>
+      <aside class="panel">
+        <h2>Quick Tips</h2>
+        <p class="small" style="margin-top:10px;">Each group holds its own roster of officials, divisions, and game schedule. Open a group to start assigning.</p>
+      </aside>
+    </section>
+  </section>
+
+  <!-- ══ GROUP HOME ══ -->
+  <section class="view" id="groupHomeView">
+    <div class="page-head">
+      <div>
+        <h1 id="groupHomeTitle">Group</h1>
+        <p id="groupHomeMeta"></p>
+      </div>
+      <div class="inline-actions">
+        <button class="btn outline" id="editGroupBtn" type="button">Edit Group</button>
+        <a class="btn outline" href="#groups">← Back</a>
+      </div>
+    </div>
+
+    <!-- Command panel -->
+    <section class="panel group-command-panel">
+      <div class="inline-actions command-actions">
+        <button class="btn" id="openScheduleView" type="button">📋 View Schedule</button>
+        <button class="btn" id="runAutoAssign" type="button">⚡ Auto Assign</button>
+        <button class="btn warning" id="reassignAutoAssign" type="button">🔄 Reassign Everything</button>
+      </div>
+      <div class="inline-actions" style="gap:10px;">
+        <button class="btn outline sm" id="useAccountPreferences" type="button">Use Default Preferences</button>
+        <button class="btn outline sm" id="openGroupPreferences" type="button">Custom Group Preferences</button>
+      </div>
+      <div id="groupPreferenceSummary" class="preference-summary"></div>
+      <div id="autoAssignMessage" class="message" style="margin-top:10px;" aria-live="polite"></div>
+    </section>
+
+    <!-- Tab nav -->
+    <nav class="group-links" aria-label="Group sections">
+      <button class="group-link" type="button" data-group-tab="schedule">
+        <strong>Schedule</strong>
+        <span>View games by date and field with assignment status.</span>
+      </button>
+      <button class="group-link" type="button" data-group-tab="umpires">
+        <strong>Officials</strong>
+        <span>Add, edit, and manage your officiating roster.</span>
+      </button>
+      <button class="group-link" type="button" data-group-tab="leagues">
+        <strong>Leagues &amp; Games</strong>
+        <span>Create divisions and add games individually or in bulk.</span>
+      </button>
+    </nav>
+
+    <!-- Schedule tab -->
+    <section class="group-tab active" id="groupScheduleTab">
+      <section class="grid metrics" aria-label="Group summary" style="margin-bottom:18px;">
+        <article class="metric"><strong id="officialsToAssignCount">0</strong><span>Officials</span></article>
+        <article class="metric"><strong id="upcomingScheduleCount">0</strong><span>Games</span></article>
+        <article class="metric"><strong id="assignedOfficialsCount">0</strong><span>Fully assigned</span></article>
+        <article class="metric"><strong id="awaitingGamesCount">0</strong><span>Need officials</span></article>
+      </section>
+      <section class="panel notification-panel" id="groupNotifications" aria-live="polite"></section>
+      <section class="panel">
+        <div class="section-title"><h2>Schedule By Date</h2></div>
+        <div id="dateTabs" class="date-tabs"></div>
+        <div id="dateScheduleBoard" class="date-board"></div>
+      </section>
+    </section>
+
+    <!-- Officials tab -->
+    <section class="group-tab" id="groupUmpiresTab">
+      <button class="btn outline group-home-back" type="button" data-group-tab="schedule">← Back to Schedule</button>
+      <section class="grid group-home-grid">
+        <article class="panel">
+          <h2>Add Official</h2>
+          <p style="margin:8px 0 14px;">Add officials to this group with contact info, ratings, and unavailable blocks.</p>
+          <button class="btn" id="openAddOfficial" type="button">+ Add Official</button>
+          <div id="umpireMessage" class="message" style="margin-top:10px;" aria-live="polite"></div>
+        </article>
+        <article class="panel">
+          <h2>Roster</h2>
+          <div id="rosterList" class="item-list" style="margin-top:10px;"></div>
+        </article>
+        <article class="panel">
+          <h2>Call Out / Unavailable</h2>
+          <p class="small muted" style="margin-bottom:12px;">Mark an official as unavailable and remove their assignments for that time.</p>
+          <form id="callOutForm">
+            <label>Official
+              <select id="callOutOfficial" required></select>
+            </label>
+            <div class="three-column">
+              <label>Date <input id="callOutDate" type="date" required /></label>
+              <label>Start time <input id="callOutStart" type="time" /></label>
+              <label>End time <input id="callOutEnd" type="time" /></label>
+            </div>
+            <label>Notes <textarea id="callOutNotes" placeholder="Reason, contact made, replacement notes…"></textarea></label>
+            <button class="btn" type="submit">Save &amp; Remove Assignments</button>
+          </form>
+        </article>
+        <article class="panel">
+          <h2>Call Out Log</h2>
+          <div id="reportMessage" class="message" aria-live="polite"></div>
+          <div id="reportsList" class="item-list" style="margin-top:10px;"></div>
+        </article>
+      </section>
+    </section>
+
+    <!-- Leagues tab -->
+    <section class="group-tab" id="groupLeaguesTab">
+      <button class="btn outline group-home-back" type="button" data-group-tab="schedule">← Back to Schedule</button>
+      <section class="grid group-home-grid">
+        <article class="panel">
+          <div class="section-title">
+            <h2>Divisions</h2>
+            <button class="btn sm" id="openDivisionModal" type="button">+ Add</button>
+          </div>
+          <p class="small muted" style="margin-bottom:10px;">Create divisions before adding games. Each division sets how many officials are needed per game.</p>
+          <div id="divisionList" class="item-list"></div>
+          <div id="divisionMessage" class="message" style="margin-top:10px;" aria-live="polite"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Paste Games (Bulk Import)</h2>
+          <form id="bulkGameForm">
+            <label>Division
+              <select id="bulkDivision" required></select>
+            </label>
+            <label>Paste schedule
+              <textarea id="bulkGamesText" placeholder="Paste from Tourney Machine, GameChanger, or any tab/comma-separated schedule. Columns like Date, Time, Field, Team 1, Team 2 work best."></textarea>
+            </label>
+            <button class="btn" type="submit">Import Games</button>
+          </form>
+          <div id="bulkGameMessage" class="message" style="margin-top:8px;" aria-live="polite"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Add Single Game</h2>
+          <form id="gameForm">
+            <label>Division
+              <select id="gameDivision" required></select>
+            </label>
+            <div class="three-column">
+              <label>Date <input id="gameDate" type="date" required /></label>
+              <label>Time <input id="gameTime" type="time" required /></label>
+              <label>Field <input id="gameField" type="text" placeholder="Field 1" required /></label>
+            </div>
+            <div class="three-column">
+              <label>Team 1 <input id="teamOne" type="text" required /></label>
+              <label>Team 2 <input id="teamTwo" type="text" required /></label>
+              <label>Level <input id="gameLevel" type="text" /></label>
+            </div>
+            <button class="btn" type="submit">Add Game</button>
+          </form>
+          <div id="gameMessage" class="message" style="margin-top:8px;" aria-live="polite"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Assignment Board</h2>
+          <p class="small muted" style="margin-bottom:10px;">Manually assign officials to each role per game.</p>
+          <div id="scheduleList" class="item-list"></div>
+        </article>
+      </section>
+    </section>
+
+  </section><!-- /groupHomeView -->
+
+</main>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Create / Edit Group -->
+<div class="modal" id="createGroupModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 id="groupModalTitle">Create Group</h2>
+    <form id="createGroupForm">
+      <label>Group name <input id="groupName" type="text" required /></label>
+      <label>Sport <input id="groupSport" type="text" required /></label>
+      <label>Type
+        <select id="groupType" required>
+          <option value="static">Static (local, no accounts)</option>
+          <option value="active">Active</option>
+        </select>
+      </label>
+      <div id="groupMessage" class="message" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button class="btn outline" id="closeCreateGroup" type="button">Cancel</button>
+        <button class="btn" id="saveGroupButton" type="submit">Create Group</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add / Edit Official -->
+<div class="modal" id="addOfficialModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 id="officialModalTitle">Add Official</h2>
+    <form id="umpireForm">
+      <div class="wizard-steps" aria-label="Steps">
+        <button class="wizard-step active" type="button" data-official-step="0">1. Info</button>
+        <button class="wizard-step" type="button" data-official-step="1">2. Ratings</button>
+        <button class="wizard-step" type="button" data-official-step="2">3. Availability</button>
+      </div>
+
+      <section class="official-pane active" data-official-pane="0">
+        <label>Name <input id="umpireName" type="text" required /></label>
+        <div class="two-column">
+          <label>Email <input id="umpireEmail" type="email" /></label>
+          <label>Phone <input id="umpirePhone" type="tel" /></label>
+        </div>
+      </section>
+
+      <section class="official-pane" data-official-pane="1">
+        <div class="two-column">
+          <label>Can work plate? <select id="officialCanPlate"><option value="yes">Yes</option><option value="no">No</option></select></label>
+          <label>Can work bases? <select id="officialCanBases"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        </div>
+        <div class="three-column">
+          <label class="rating-slider">
+            <span>Plate rating <output id="umpirePlateRatingValue">5</output></span>
+            <input id="umpirePlateRating" type="range" min="0" max="10" step="1" value="5" />
+          </label>
+          <label class="rating-slider">
+            <span>Bases rating <output id="umpireBaseRatingValue">5</output></span>
+            <input id="umpireBaseRating" type="range" min="0" max="10" step="1" value="5" />
+          </label>
+          <label class="rating-slider">
+            <span>Professionalism <output id="umpireProfessionalismRatingValue">5</output></span>
+            <input id="umpireProfessionalismRating" type="range" min="0" max="10" step="1" value="5" />
+          </label>
+        </div>
+        <p class="small muted">Seniority score = plate + bases + professionalism (max 30).</p>
+      </section>
+
+      <section class="official-pane" data-official-pane="2">
+        <div class="availability-builder">
+          <h3 style="margin:0;">Unavailable Blocks</h3>
+          <p class="small muted">Officials are available at all times unless you add a block.</p>
+          <div class="three-column">
+            <label>Date <input id="availabilityDate" type="date" /></label>
+            <label>Start <input id="availabilityStart" type="time" /></label>
+            <label>End <input id="availabilityEnd" type="time" /></label>
+          </div>
+          <label>Reason <input id="availabilityNote" type="text" placeholder="Out of town, work, family event…" /></label>
+          <button class="btn outline" id="addAvailabilitySlot" type="button">+ Add Block</button>
+          <div id="availabilityDraftList" class="availability-list"></div>
+        </div>
+      </section>
+
+      <div id="officialModalMessage" class="message" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button class="btn outline" id="closeAddOfficial" type="button">Cancel</button>
+        <button class="btn outline" id="officialBack" type="button" style="display:none;">Back</button>
+        <button class="btn" id="officialNext" type="button">Next</button>
+        <button class="btn" id="officialSave" type="submit" style="display:none;">Save Official</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add / Edit Division -->
+<div class="modal" id="divisionModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 id="divisionModalTitle">Add Division</h2>
+    <form id="divisionForm">
+      <label>Division / League name <input id="divisionName" type="text" required /></label>
+      <div class="two-column">
+        <label>Officials needed per game <input id="divisionUmpiresNeeded" type="number" min="1" max="6" value="2" required /></label>
+        <label>Priority (1 = highest) <input id="divisionPriority" type="number" min="1" value="1" required /></label>
+      </div>
+      <label>Avg game duration (minutes) <input id="divisionGameMinutes" type="number" min="30" max="300" step="5" value="105" required /></label>
+      <label>Notes <textarea id="divisionNotes" placeholder="Example: Championship division — assign strongest officials first."></textarea></label>
+      <div id="divisionModalMessage" class="message" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button class="btn outline" id="closeDivisionModal" type="button">Cancel</button>
+        <button class="btn danger sm" id="deleteDivisionBtn" type="button" style="display:none;">Delete Division</button>
+        <button class="btn" type="submit">Save Division</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Auto Assign Preferences -->
+<div class="modal" id="preferenceModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 id="preferenceModalTitle">Auto Assign Preferences</h2>
+    <form id="preferenceForm">
+      <div id="preferenceQuestionsList"></div>
+      <div id="preferenceModalMessage" class="message" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button class="btn outline" id="closePreferenceModal" type="button">Cancel</button>
+        <button class="btn" type="submit">Save Preferences</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Schedule View / Export -->
+<div class="modal" id="scheduleViewModal" aria-hidden="true">
+  <div class="modal-card schedule-view-card">
+    <div class="schedule-view-head">
+      <div>
+        <h2 id="scheduleViewTitle">Schedule View</h2>
+        <p>Review assignments, print, or export.</p>
+      </div>
+      <button class="btn outline" id="closeScheduleView" type="button">Close</button>
+    </div>
+    <div class="inline-actions schedule-view-actions">
+      <button class="btn" id="printScheduleView" type="button">🖨 Print</button>
+      <button class="btn" id="exportExcelFromView" type="button">⬇ Export Excel</button>
+    </div>
+    <div id="scheduleViewMessage" class="message" aria-live="polite"></div>
+    <div id="scheduleViewContent" class="schedule-view-content"></div>
+  </div>
+</div>
+
+<!-- ══ SCRIPT ══ -->
+<script>
+// ─────────────────────────────────────────────
+//  Constants & State
+// ─────────────────────────────────────────────
+const STORAGE_KEY          = "officialsEngineStandaloneDashboard";
+const PREFS_KEY            = "officialsEngineAutoAssignPreferences";
+const DEFAULT_GAME_MINUTES = 105;
+const LOW_RATING_THRESHOLD = 4;
+
+let groups                  = [];
+let activeGroupId           = "";
+let activeGroupTab          = "schedule";
+let activeScheduleDate      = "";
+let pendingAvailability     = [];
+let editingOfficialId       = "";
+let editingDivisionId       = "";
+let editingGroupId          = "";
+let currentOfficialStep     = 0;
+let accountPreferences      = null;
+let preferenceContext       = "account";
+
+// ─────────────────────────────────────────────
+//  SIMPLIFIED Auto Assign Questions (10 total)
+// ─────────────────────────────────────────────
+const AUTO_ASSIGN_QUESTIONS = [
+  {
+    section: "Philosophy",
+    key: "assigningPhilosophy",
+    label: "1. What is your assigning philosophy?",
+    options: ["Balanced — spread games evenly", "Best officials on best games", "Develop newer officials first", "Same officials per field"]
+  },
+  {
+    section: "Philosophy",
+    key: "ratingImportance",
+    label: "2. How much do ratings matter when picking officials?",
+    options: ["Not at all", "Somewhat", "Moderately", "Very much", "Ratings first"]
+  },
+  {
+    section: "Plate Assignments",
+    key: "rotatePlateAssignments",
+    label: "3. Rotate plate assignments evenly across officials?",
+    options: ["Yes", "No"]
+  },
+  {
+    section: "Plate Assignments",
+    key: "plateSwitchAfter",
+    label: "4. After how many consecutive plate games should an official switch out?",
+    options: ["Never", "1 game", "2 games", "3 games"]
+  },
+  {
+    section: "Fairness",
+    key: "similarGameCounts",
+    label: "5. Should all officials receive a similar number of games?",
+    options: ["Yes", "No"]
+  },
+  {
+    section: "Fairness",
+    key: "strongerHighLevelGames",
+    label: "6. Should stronger officials get more high-level or priority games?",
+    options: ["Always", "Usually", "Sometimes", "Never"]
+  },
+  {
+    section: "Crew Pairing",
+    key: "veteranMentors",
+    label: "7. Pair veteran officials with newer officials to mentor them?",
+    options: ["Always", "Usually", "Sometimes", "Never"]
+  },
+  {
+    section: "Crew Pairing",
+    key: "avoidRepeatedCrews",
+    label: "8. Avoid scheduling the same crew together repeatedly?",
+    options: ["Always", "Usually", "Sometimes", "Never"]
+  },
+  {
+    section: "Rest & Availability",
+    key: "minimumRest",
+    label: "9. Minimum rest time required between games for the same official?",
+    options: ["No minimum", "30 minutes", "1 hour", "2 hours", "3+ hours"]
+  },
+  {
+    section: "Rest & Availability",
+    key: "avoidBackToBack",
+    label: "10. Avoid scheduling back-to-back games for the same official?",
+    options: ["Always", "Usually", "Sometimes", "Never"]
+  }
+];
+
+const DEFAULT_PREFS = {
+  assigningPhilosophy:   "Balanced — spread games evenly",
+  ratingImportance:      "Moderately",
+  rotatePlateAssignments: "Yes",
+  plateSwitchAfter:      "2 games",
+  similarGameCounts:     "Yes",
+  strongerHighLevelGames: "Usually",
+  veteranMentors:        "Sometimes",
+  avoidRepeatedCrews:    "Sometimes",
+  minimumRest:           "No minimum",
+  avoidBackToBack:       "Sometimes"
+};
+
+const CREW_ROLES = [
+  { key: "plate", label: "Home Plate", type: "plate" },
+  { key: "u1",    label: "U1",         type: "base" },
+  { key: "u2",    label: "U2",         type: "base" },
+  { key: "u3",    label: "U3",         type: "base" },
+  { key: "u4",    label: "U4",         type: "base" },
+  { key: "u5",    label: "U5",         type: "base" }
+];
+
+// ─────────────────────────────────────────────
+//  Storage
+// ─────────────────────────────────────────────
+function loadGroups() {
+  try { groups = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { groups = []; }
+}
+function saveGroups() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
+}
+function loadPreferences() {
+  try { accountPreferences = JSON.parse(localStorage.getItem(PREFS_KEY) || "null"); }
+  catch { accountPreferences = null; }
+}
+function savePreferences() {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(accountPreferences));
+}
+
+// ─────────────────────────────────────────────
+//  ID generation
+// ─────────────────────────────────────────────
+function makeId() {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+}
+
+// ─────────────────────────────────────────────
+//  Init & Routing
+// ─────────────────────────────────────────────
+loadGroups();
+loadPreferences();
+renderAll();
+route();
+
+window.addEventListener("hashchange", route);
+
+function route() {
+  const hash = window.location.hash || "#dashboard";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll("[data-nav]").forEach(a => a.classList.remove("active"));
+
+  if (hash.startsWith("#group/")) {
+    activeGroupId = hash.replace("#group/", "");
+    document.getElementById("groupHomeView").classList.add("active");
+    renderGroupHome();
+    return;
+  }
+  if (hash === "#groups") {
+    document.getElementById("groupsView").classList.add("active");
+    document.querySelector('[data-nav="groups"]').classList.add("active");
+    renderGroupsView();
+    return;
+  }
+  if (hash === "#auto-assign") {
+    document.getElementById("autoAssignView").classList.add("active");
+    document.querySelector('[data-nav="auto-assign"]').classList.add("active");
+    renderAccountPreferenceSummary();
+    return;
+  }
+  // Default: dashboard
+  document.getElementById("dashboardView").classList.add("active");
+  document.querySelector('[data-nav="dashboard"]').classList.add("active");
+}
+
+// ─────────────────────────────────────────────
+//  Master render
+// ─────────────────────────────────────────────
+function renderAll() {
+  const allGames     = groups.flatMap(g => g.games || []);
+  const allOfficials = groups.flatMap(g => g.umpires || []);
+  const awaiting     = allGames.filter(g => gameOfficialIds(g).length === 0);
+
+  el("groupCount").textContent    = groups.length;
+  el("gameCount").textContent     = allGames.length;
+  el("officialsCount").textContent = allOfficials.length;
+  el("awaitingCount").textContent = awaiting.length;
+
+  renderAccountPreferenceSummary();
+  renderGroupsView();
+}
+
+// ─────────────────────────────────────────────
+//  Groups view
+// ─────────────────────────────────────────────
+function renderGroupsView() {
+  const search = (el("groupSearch")?.value || "").trim().toLowerCase();
+  const filtered = groups.filter(g =>
+    !search || g.name.toLowerCase().includes(search) || (g.sport || "").toLowerCase().includes(search)
+  );
+  el("createdGroupsList").innerHTML = filtered.length
+    ? filtered.map(groupCard).join("")
+    : '<div class="empty">No groups yet. Click "+ Create Group" to get started.</div>';
+}
+
+function groupCard(g) {
+  const gameCount = (g.games || []).length;
+  const officialCount = (g.umpires || []).length;
+  return `
+    <button class="group-card" type="button" data-group-id="${g.id}">
+      <strong>${esc(g.name)}</strong>
+      <span class="small muted">${esc(g.sport || "")} · ${gameCount} games · ${officialCount} officials</span><br>
+      <span class="pill ${g.type === "active" ? "blue" : ""}">${esc(capitalize(g.type || "static"))}</span>
+    </button>`;
+}
+
+// ─────────────────────────────────────────────
+//  Group home
+// ─────────────────────────────────────────────
+function activeGroup() {
+  return groups.find(g => g.id === activeGroupId) || null;
+}
+
+function renderGroupHome() {
+  const group = activeGroup();
+  if (!group) { window.location.hash = "#groups"; return; }
+
+  ensureGroupDefaults(group);
+  enforceDivisionCrewLimits(group);
+
+  const games    = group.games || [];
+  const umpires  = group.umpires || [];
+  const needing  = games.filter(g => gameOfficialIds(g).length < gameRolesForGame(group, g).length);
+  const full     = games.filter(g => gameOfficialIds(g).length >= gameRolesForGame(group, g).length);
+
+  el("groupHomeTitle").textContent = group.name;
+  el("groupHomeMeta").innerHTML    = `${esc(group.sport || "")} <span class="pill ${group.type === "active" ? "blue" : ""}">${esc(capitalize(group.type || "static"))}</span>`;
+  el("officialsToAssignCount").textContent = umpires.length;
+  el("upcomingScheduleCount").textContent  = games.length;
+  el("assignedOfficialsCount").textContent = full.length;
+  el("awaitingGamesCount").textContent     = needing.length;
+
+  renderGroupTabs();
+  renderGroupNotifications(group);
+  renderDateScheduleHome(group);
+  renderRoster(group);
+  renderDivisions(group);
+  renderDivisionSelectors(group);
+  renderCallOutOfficialSelect(group);
+  renderGroupPreferenceSummary(group);
+  renderSchedule(group);
+  renderReports(group);
+}
+
+function renderGroupTabs() {
+  document.querySelectorAll(".group-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll("[data-group-tab]").forEach(b => {
+    b.classList.toggle("active", b.dataset.groupTab === activeGroupTab);
+  });
+  const target = document.getElementById("group" + capitalize(activeGroupTab) + "Tab")
+               || document.getElementById("groupScheduleTab");
+  target.classList.add("active");
+}
+
+// ─────────────────────────────────────────────
+//  Notifications
+// ─────────────────────────────────────────────
+function renderGroupNotifications(group) {
+  const panel    = el("groupNotifications");
+  const warnings = lowRatedAssignmentWarnings(group);
+  if (!warnings.length) { panel.classList.remove("show"); panel.innerHTML = ""; return; }
+  panel.classList.add("show");
+  panel.innerHTML = `
+    <h2>⚠ Assignment Notices</h2>
+    <p class="small muted">These positions are filled but the assigned official has a rating below ${LOW_RATING_THRESHOLD}.</p>
+    <ul class="notification-list">
+      ${warnings.slice(0,12).map(w => `<li>${esc(w)}</li>`).join("")}
+    </ul>
+    ${warnings.length > 12 ? `<p class="small muted">Showing first 12 of ${warnings.length}.</p>` : ""}`;
+}
+
+function lowRatedAssignmentWarnings(group) {
+  return (group.games || []).flatMap(game => {
+    const a = normalizeGameAssignments(game);
+    return gameRolesForGame(group, game).map(role => {
+      const id  = a[role.key];
+      if (!id) return "";
+      const off = findOfficial(group, id);
+      if (!off) return "";
+      const rk  = role.type === "plate" ? "plate" : "base";
+      const rat = officialRating(off, rk);
+      if (rat >= LOW_RATING_THRESHOLD) return "";
+      return `${fmtDate(game.date)} | ${fmtTime(game.time)} | ${fieldName(group, game)} | ${game.teamOne} vs ${game.teamTwo} | ${role.label}: ${off.name} (rating ${rat})`;
+    }).filter(Boolean);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Date-based schedule home
+// ─────────────────────────────────────────────
+function renderDateScheduleHome(group) {
+  const dateTabs = el("dateTabs");
+  const board    = el("dateScheduleBoard");
+  const dates    = uniqueDates(group.games || []);
+
+  if (!dates.length) {
+    activeScheduleDate = "";
+    dateTabs.innerHTML = "";
+    board.innerHTML = '<div class="empty">No games added yet. Go to Leagues &amp; Games to add games.</div>';
+    return;
+  }
+  if (!activeScheduleDate || !dates.includes(activeScheduleDate)) activeScheduleDate = dates[0];
+
+  dateTabs.innerHTML = dates.map(d =>
+    `<button class="date-tab${d === activeScheduleDate ? " active" : ""}" type="button" data-schedule-date="${esc(d)}">${esc(fmtDate(d))}</button>`
+  ).join("");
+
+  const dayGames     = (group.games || []).filter(g => (g.date || "Date TBD") === activeScheduleDate);
+  const byField      = groupByField(group, sortedByField(group, dayGames));
+  const fieldKeys    = Object.keys(byField);
+
+  board.innerHTML = fieldKeys.length
+    ? fieldKeys.map(f => {
+        const gms = byField[f];
+        return `<article class="field-card">
+          <h2>${esc(f)}</h2>
+          ${gms.map(game => {
+            const needed   = gameRolesForGame(group, game).length;
+            const assigned = gameOfficialIds(game).length;
+            const full     = assigned >= needed;
+            const open     = openRoleLabels(group, game);
+            return `<div class="field-game">
+              <strong>${esc(fmtTime(game.time))} &nbsp;|&nbsp; ${esc(game.teamOne)} vs ${esc(game.teamTwo)}</strong>
+              <span class="pill ${full ? "" : "blue"}">${full ? "✓ Assigned" : assigned + "/" + needed + " assigned"}</span>
+              <p class="small muted">${esc(assignedNames(group, game) || "No officials assigned")}</p>
+              ${open.length ? `<p class="need-line">Needs: ${esc(open.join(", "))}</p>` : ""}
+            </div>`;
+          }).join("")}
+        </article>`;
+      }).join("")
+    : '<div class="empty">No games on this date.</div>';
+}
+
+// ─────────────────────────────────────────────
+//  Roster
+// ─────────────────────────────────────────────
+function renderRoster(group) {
+  const roster = group.umpires || [];
+  el("rosterList").innerHTML = roster.length
+    ? roster.map(u => {
+        const blocks = (u.unavailableBlocks || []);
+        return `<article class="item-card">
+          <strong>${esc(u.name)}</strong>
+          <p class="small muted">Email: ${esc(u.email || "—")} &nbsp; Phone: ${esc(u.phone || "—")}</p>
+          <p class="small">Plate: ${yesNo(canWork(u,"plate"))} | Bases: ${yesNo(canWork(u,"base"))}</p>
+          <p class="small">Ratings — Plate: ${officialRating(u,"plate")} | Bases: ${officialRating(u,"base")} | Prof: ${officialRating(u,"professionalism")}</p>
+          <p class="small muted">Unavailable blocks: ${blocks.length ? blocks.map(fmtBlock).join("; ") : "None"}</p>
+          <span class="pill">Seniority ${seniority(u)}</span>
+          <div class="inline-actions" style="margin-top:8px;">
+            <button class="btn outline sm edit-official" type="button" data-official-id="${u.id}">Edit</button>
+            <button class="btn danger sm delete-official" type="button" data-official-id="${u.id}">Delete</button>
+          </div>
+        </article>`;
+      }).join("")
+    : '<div class="empty">No officials added yet.</div>';
+}
+
+// ─────────────────────────────────────────────
+//  Divisions
+// ─────────────────────────────────────────────
+function renderDivisions(group) {
+  const divs = sortedDivisions(group.divisions || []);
+  el("divisionList").innerHTML = divs.length
+    ? divs.map(d => `<article class="item-card">
+        <strong>${esc(d.name)}</strong>
+        <p class="small muted">Officials needed: ${d.umpiresNeeded || 2} &nbsp;|&nbsp; Priority: ${d.priority || 1} &nbsp;|&nbsp; ~${divGameMins(d)} min/game</p>
+        ${d.notes ? `<p class="small">${esc(d.notes)}</p>` : ""}
+        <div class="inline-actions" style="margin-top:8px;">
+          <button class="btn outline sm edit-division" type="button" data-division-id="${d.id}">Edit</button>
+        </div>
+      </article>`).join("")
+    : '<div class="empty">No divisions yet.</div>';
+}
+
+function renderDivisionSelectors(group) {
+  const opts = ['<option value="">Choose division</option>']
+    .concat(sortedDivisions(group.divisions || []).map(d =>
+      `<option value="${d.id}">${esc(d.name)} | ${d.umpiresNeeded||2} officials | ${divGameMins(d)} min | priority ${d.priority||1}</option>`
+    )).join("");
+  el("gameDivision").innerHTML  = opts;
+  el("bulkDivision").innerHTML  = opts;
+}
+
+// ─────────────────────────────────────────────
+//  Assignment board
+// ─────────────────────────────────────────────
+function renderSchedule(group) {
+  const games   = sortedByField(group, group.games || []);
+  const divGrps = groupByDivision(group, games);
+  el("scheduleList").innerHTML = games.length
+    ? divGrps.map(dg => {
+        const byField = groupByField(group, dg.games);
+        return `<div class="division-heading">
+            <strong>${esc(dg.label)}</strong>
+            <span class="small muted">${esc(dg.meta)}</span>
+          </div>
+          ${Object.keys(byField).map(f => `
+            <h3 class="field-heading">${esc(f)}</h3>
+            ${byField[f].map(game => {
+              const roles = gameRolesForGame(group, game);
+              const open  = openRoleLabels(group, game);
+              return `<article class="item-card">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                  <div>
+                    <strong>${esc(game.teamOne)} vs ${esc(game.teamTwo)}</strong>
+                    <p class="small muted">${esc(game.date||"Date TBD")} | ${esc(fmtTime(game.time))} | ${esc(fieldName(group,game))} | ${esc(game.level||"")}</p>
+                  </div>
+                  <button class="btn danger sm delete-game" type="button" data-game-id="${game.id}">Remove</button>
+                </div>
+                <div class="role-grid">
+                  ${roles.map(role => `<label>${esc(role.label)}
+                    <select class="game-role-assign" data-game-id="${game.id}" data-role="${role.key}">
+                      ${assignmentOptions(group, game, role.key)}
+                    </select>
+                  </label>`).join("")}
+                </div>
+                ${open.length ? `<p class="need-line">Needs: ${esc(open.join(", "))}</p>` : ""}
+              </article>`;
+            }).join("")}
+          `).join("")}`;
+      }).join("")
+    : '<div class="empty">No games yet.</div>';
+}
+
+// ─────────────────────────────────────────────
+//  Reports
+// ─────────────────────────────────────────────
+function renderReports(group) {
+  const reports = group.reports || [];
+  el("reportsList").innerHTML = reports.length
+    ? reports.map(r => `<article class="item-card">
+        <strong>${esc(r.title)}</strong>
+        <p class="small muted">${esc(r.details||"")}</p>
+      </article>`).join("")
+    : '<div class="empty">No call outs logged.</div>';
+}
+
+// ─────────────────────────────────────────────
+//  Preferences
+// ─────────────────────────────────────────────
+function renderAccountPreferenceSummary() {
+  const sum = el("accountPreferenceSummary");
+  if (!sum) return;
+  sum.innerHTML = accountPreferences
+    ? prefSummaryHtml(accountPreferences, "Saved preferences")
+    : '<div class="empty">No preferences saved yet. Click "Edit Preferences" to configure Auto Assign.</div>';
+}
+
+function renderGroupPreferenceSummary(group) {
+  const sum = el("groupPreferenceSummary");
+  if (!sum || !group) return;
+  const prefs = group.autoAssignMode === "custom" && group.autoAssignPreferences
+    ? group.autoAssignPreferences : accountPreferences;
+  const label = group.autoAssignMode === "custom" ? "Custom group preferences" : "Using default account preferences";
+  sum.innerHTML = prefs
+    ? prefSummaryHtml(prefs, label)
+    : '<div class="empty">No preferences configured. Defaults will be used.</div>';
+}
+
+function prefSummaryHtml(p, label) {
+  return `<article class="item-card">
+    <strong>${esc(label)}</strong>
+    <p class="small muted">Philosophy: ${esc(p.assigningPhilosophy || "—")}</p>
+    <p class="small muted">Ratings: ${esc(p.ratingImportance || "—")} &nbsp;| Plate rotation: ${esc(p.rotatePlateAssignments || "—")} &nbsp;| Plate switch: ${esc(p.plateSwitchAfter || "—")}</p>
+    <p class="small muted">Equal games: ${esc(p.similarGameCounts || "—")} &nbsp;| Back-to-back: ${esc(p.avoidBackToBack || "—")} &nbsp;| Rest: ${esc(p.minimumRest || "—")}</p>
+  </article>`;
+}
+
+function openPreferenceEditor(ctx) {
+  preferenceContext = ctx;
+  const group   = activeGroup();
+  const current = ctx === "group" && group?.autoAssignPreferences
+    ? group.autoAssignPreferences
+    : accountPreferences || DEFAULT_PREFS;
+  el("preferenceModalTitle").textContent = ctx === "group" ? "Group Auto Assign Preferences" : "Default Auto Assign Preferences";
+  renderPreferenceQuestions(current);
+  el("preferenceModal").classList.add("open");
+}
+
+function renderPreferenceQuestions(prefs) {
+  let lastSection = "";
+  el("preferenceQuestionsList").innerHTML = AUTO_ASSIGN_QUESTIONS.map(q => {
+    const header = q.section !== lastSection
+      ? `<p class="preference-section-title">${esc(q.section)}</p>` : "";
+    lastSection = q.section;
+    return header + `<label class="preference-question">
+      <strong>${esc(q.label)}</strong>
+      <select name="${q.key}">
+        ${q.options.map(o => `<option value="${esc(o)}"${(prefs[q.key]||q.options[0]) === o ? " selected" : ""}>${esc(o)}</option>`).join("")}
+      </select>
+    </label>`;
+  }).join("");
+}
+
+function collectPreferenceAnswers() {
+  return AUTO_ASSIGN_QUESTIONS.reduce((acc, q) => {
+    const f = document.querySelector(`[name="${q.key}"]`);
+    acc[q.key] = f ? f.value : q.options[0];
+    return acc;
+  }, {});
+}
+
+// ─────────────────────────────────────────────
+//  Auto Assign engine
+// ─────────────────────────────────────────────
+function activePrefs(group) {
+  if (group?.autoAssignMode === "custom" && group.autoAssignPreferences) return group.autoAssignPreferences;
+  return accountPreferences || DEFAULT_PREFS;
+}
+
+function runAutoAssignForGroup(group, opts = {}) {
+  const prefs       = activePrefs(group);
+  const clearFirst  = Boolean(opts.clearExisting);
+  const cleared     = clearFirst ? clearGroupAssignments(group) : 0;
+  const reservations = [];
+  let assigned = 0;
+
+  sortedForAssign(group, group.games || []).forEach(game => {
+    const a = normalizeGameAssignments(game);
+    gameRolesForGame(group, game).forEach(role => {
+      if (a[role.key]) return;
+      const off = bestForRole(group, game, role, prefs, reservations);
+      if (!off) return;
+      a[role.key] = off.id;
+      reservations.push({ officialId: off.id, gameId: game.id, game });
+      assigned++;
+    });
+    game.umpireIds = gameOfficialIds(game);
+    game.umpireId  = game.umpireIds[0] || "";
+  });
+
+  updateGroups();
+  showAutoAssignResult(group, assigned, unfilledNeeds(group), { cleared, clearFirst });
+}
+
+function clearGroupAssignments(group) {
+  let count = 0;
+  (group.games || []).forEach(game => {
+    const a = normalizeGameAssignments(game);
+    Object.keys(a).forEach(k => { if (a[k]) { a[k] = ""; count++; } });
+    game.umpireIds = [];
+    game.umpireId  = "";
+  });
+  return count;
+}
+
+function showAutoAssignResult(group, assigned, shortages, meta) {
+  const msgEl   = el("autoAssignMessage");
+  if (!msgEl) return;
+  const type    = shortages.length ? "error" : "success";
+  const cleared = meta.clearFirst
+    ? `Cleared ${meta.cleared} old assignment${meta.cleared === 1 ? "" : "s"} then assigned `
+    : "Assigned ";
+  msgEl.className = "message show " + type;
+  msgEl.innerHTML = `<strong>${cleared}${assigned} position${assigned === 1 ? "" : "s"}.</strong>
+    ${shortages.length
+      ? `<p>Still need ${shortages.length} more official${shortages.length === 1 ? "" : "s"}:</p>
+         <ul class="shortage-list">${shortages.slice(0,10).map(n =>
+           `<li>${esc(fmtDate(n.date))} | ${esc(fmtTime(n.time))} | ${esc(n.field)} | ${esc(n.teams)} — needs ${esc(n.role.label)}</li>`
+         ).join("")}</ul>`
+      : "<p>All positions are filled!</p>"}`;
+}
+
+function unfilledNeeds(group) {
+  return (group.games || []).flatMap(game =>
+    openRoles(group, game).map(role => ({
+      game, role,
+      date:  game.date || "Date TBD",
+      time:  game.time || "",
+      field: fieldName(group, game),
+      teams: `${game.teamOne || "Team 1"} vs ${game.teamTwo || "Team 2"}`
+    }))
+  );
+}
+
+function sortedForAssign(group, games) {
+  return games.slice().sort((a, b) => {
+    const da = findDivision(group, a.divisionId);
+    const db = findDivision(group, b.divisionId);
+    return (Number(da?.priority||999) - Number(db?.priority||999))
+      || String(a.date||"").localeCompare(String(b.date||""))
+      || String(a.time||"").localeCompare(String(b.time||""));
+  });
+}
+
+function bestForRole(group, game, role, prefs, reservations) {
+  const ranked = rankedForRole(group, game, role, prefs, reservations);
+  return ranked.length ? ranked[0].official : null;
+}
+
+function rankedForRole(group, game, role, prefs, reservations) {
+  const a = normalizeGameAssignments(game);
+  return (group.umpires || [])
+    .filter(off => {
+      if (!canWork(off, role.type)) return false;
+      if (!availableForGame(group, off, game)) return false;
+      if (hasConflict(group, off.id, game.id, game)) return false;
+      if (hasReservationConflict(group, reservations, off.id, game.id, game)) return false;
+      return !Object.keys(a).some(k => a[k] === off.id);
+    })
+    .map(off => ({ official: off, score: assignScore(group, game, role, off, prefs) }))
+    .sort((a, b) => b.score - a.score || String(a.official.name||"").localeCompare(String(b.official.name||"")));
+}
+
+function assignScore(group, game, role, off, prefs) {
+  const ratingW    = impW(prefs.ratingImportance);
+  const roleRating = role.type === "plate" ? officialRating(off,"plate") : officialRating(off,"base");
+  const total      = seniority(off);
+  const games      = officialGameCount(group, off.id);
+  const platGames  = officialGameCount(group, off.id, "plate");
+  const fieldGames = officialFieldCount(group, off.id, fieldName(group, game));
+  const div        = findDivision(group, game.divisionId);
+  const highPri    = Number(div?.priority||99) <= 1 || /playoff|champ|final|semi/i.test(game.level||"");
+
+  let score = roleRating * (8 + ratingW * 5) + total;
+
+  const phil = prefs.assigningPhilosophy || "";
+  if (phil.startsWith("Balanced"))         score -= games * 6;
+  if (phil.startsWith("Best") && highPri)  score += total * 2;
+  if (phil.startsWith("Develop"))          score += Math.max(0, 28 - total) * 2;
+  if (phil.startsWith("Same"))             score += fieldGames * 8;
+
+  if (prefs.rotatePlateAssignments === "Yes" && role.key === "plate") score -= platGames * 10;
+  if (prefs.similarGameCounts === "Yes")  score -= games * 7;
+  if (freqW(prefs.strongerHighLevelGames) && highPri) score += total * freqW(prefs.strongerHighLevelGames);
+
+  // Back-to-back penalty
+  const restMins = restMinutes(prefs.minimumRest);
+  if (restMins > 0) {
+    const window = gameWindow(group, game);
+    const hasClose = (group.games||[]).some(g => {
+      if (g.id === game.id || !gameOfficialIds(g).includes(off.id)) return false;
+      const ow = gameWindow(group, g);
+      if (!ow || !window) return false;
+      const gap = ow.end <= window.start ? window.start - ow.end : ow.start - window.end;
+      return gap >= 0 && gap < restMins;
+    });
+    if (hasClose) score -= 1000;
+  }
+
+  return score;
+}
+
+function officialGameCount(group, id, roleKey) {
+  return (group.games||[]).reduce((c, game) => {
+    const a = normalizeGameAssignments(game);
+    if (roleKey) return c + (a[roleKey] === id ? 1 : 0);
+    return c + (gameOfficialIds(game).includes(id) ? 1 : 0);
+  }, 0);
+}
+function officialFieldCount(group, id, fName) {
+  return (group.games||[]).reduce((c, game) =>
+    c + (fieldName(group, game) === fName && gameOfficialIds(game).includes(id) ? 1 : 0), 0);
+}
+
+function impW(v) {
+  return { "Not at all":0, "Somewhat":0.5, "Moderately":1, "Very much":2, "Ratings first":3 }[v] || 1;
+}
+function freqW(v) {
+  return { "Always":3, "Usually":2, "Sometimes":1, "Never":0, "No Preference":0 }[v] || 0;
+}
+function restMinutes(v) {
+  return { "No minimum":0, "30 minutes":30, "1 hour":60, "2 hours":120, "3+ hours":180 }[v] || 0;
+}
+
+// ─────────────────────────────────────────────
+//  Game helpers
+// ─────────────────────────────────────────────
+function gameOfficialIds(game) {
+  const a = normalizeGameAssignments(game);
+  return Array.from(new Set(CREW_ROLES.map(r => a[r.key]).filter(Boolean)));
+}
+
+function emptyAssignments() {
+  return CREW_ROLES.reduce((o, r) => { o[r.key] = ""; return o; }, {});
+}
+
+function normalizeGameAssignments(game) {
+  if (!game.assignments) {
+    game.assignments = emptyAssignments();
+    const ids = Array.isArray(game.umpireIds) ? game.umpireIds.filter(Boolean)
+              : game.umpireId ? [game.umpireId] : [];
+    ids.slice(0, CREW_ROLES.length).forEach((id, i) => { game.assignments[CREW_ROLES[i].key] = id; });
+  }
+  CREW_ROLES.forEach(r => {
+    if (!Object.prototype.hasOwnProperty.call(game.assignments, r.key)) game.assignments[r.key] = "";
+  });
+  return game.assignments;
+}
+
+function gameRolesForGame(group, game) {
+  const div    = findDivision(group, game.divisionId);
+  const needed = Math.max(1, Math.min(6, Number(div?.umpiresNeeded || 1)));
+  return CREW_ROLES.slice(0, needed);
+}
+
+function openRoles(group, game) {
+  const a = normalizeGameAssignments(game);
+  return gameRolesForGame(group, game).filter(r => !a[r.key]);
+}
+function openRoleLabels(group, game) {
+  return openRoles(group, game).map(r => r.label);
+}
+
+function assignedNames(group, game) {
+  const a = normalizeGameAssignments(game);
+  return CREW_ROLES.map(r => {
+    if (!a[r.key]) return "";
+    const off = findOfficial(group, a[r.key]);
+    return `${r.label}: ${off ? off.name : "Unknown"}`;
+  }).filter(Boolean).join(", ");
+}
+
+function assignmentOptions(group, game, roleKey) {
+  const a       = normalizeGameAssignments(game);
+  const cur     = a[roleKey] || "";
+  const role    = CREW_ROLES.find(r => r.key === roleKey) || { type: "base" };
+  const opts    = ['<option value="">Unassigned</option>'];
+
+  sortedBySeniority(group.umpires || []).forEach(off => {
+    const onOther   = Object.keys(a).some(k => k !== roleKey && a[k] === off.id);
+    const notQual   = !canWork(off, role.type);
+    const blocked   = !availableForGame(group, off, game);
+    const conflict  = hasConflict(group, off.id, game.id, game);
+    if (off.id !== cur && (onOther || notQual || blocked || conflict)) return;
+
+    const notes = [];
+    if (notQual)  notes.push("not qualified");
+    if (blocked)  notes.push("unavailable");
+    if (conflict) notes.push("time conflict");
+    const rk  = role.type === "plate" ? "plate" : "base";
+    const lbl = `${off.name} — ${role.label} ${officialRating(off, rk)} — seniority ${seniority(off)}${notes.length ? " ("+notes.join(", ")+")" : ""}`;
+    opts.push(`<option value="${off.id}"${off.id === cur ? " selected" : ""}>${esc(lbl)}</option>`);
+  });
+  return opts.join("");
+}
+
+// ─────────────────────────────────────────────
+//  Official helpers
+// ─────────────────────────────────────────────
+function findOfficial(group, id) {
+  return (group.umpires || []).find(u => u.id === id) || null;
+}
+function sortedBySeniority(officials) {
+  return officials.slice().sort((a, b) => seniority(b) - seniority(a) || String(a.name||"").localeCompare(String(b.name||"")));
+}
+function officialRating(off, key) {
+  if (key === "plate" && !canWork(off, "plate")) return 0;
+  if (key === "base"  && !canWork(off, "base"))  return 0;
+  const r = off.ratings || {};
+  if (r[key] !== undefined) return clampR(r[key]);
+  if (key === "plate")         return clampR(off.plateRating ?? 5);
+  if (key === "base")          return clampR(off.baseRating  ?? 5);
+  if (key === "professionalism") return clampR(off.professionalismRating ?? 5);
+  return 5;
+}
+function seniority(off) {
+  return officialRating(off,"plate") + officialRating(off,"base") + officialRating(off,"professionalism");
+}
+function canWork(off, type) {
+  const c = off.capabilities || {};
+  if (type === "plate") return c.plate !== false;
+  if (type === "base")  return c.base  !== false;
+  return true;
+}
+function clampR(v) { return Math.max(0, Math.min(10, Number(v) || 5)); }
+function yesNo(v) { return v ? "Yes" : "No"; }
+
+// ─────────────────────────────────────────────
+//  Availability & conflict checks
+// ─────────────────────────────────────────────
+function availableForGame(group, off, game) {
+  const blocks = off.unavailableBlocks || [];
+  if (!blocks.length || !game.date) return true;
+  return !blocks.some(b => {
+    if (b.date !== game.date) return false;
+    if (!game.time || (!b.start && !b.end)) return true;
+    return windowOverlapsBlock(gameWindow(group, game), b);
+  });
+}
+
+function hasConflict(group, offId, curGameId, curGame) {
+  if (!offId || !curGame.date || !curGame.time) return false;
+  return (group.games || []).some(g => {
+    if (g.id === curGameId) return false;
+    if (!sharesSlot(group, g, curGame)) return false;
+    return gameOfficialIds(g).includes(offId);
+  });
+}
+
+function hasReservationConflict(group, reservations, offId, curGameId, curGame) {
+  if (!offId || !curGame.date || !curGame.time) return false;
+  return reservations.some(r =>
+    r.officialId === offId && r.gameId !== curGameId && sharesSlot(group, r.game, curGame)
+  );
+}
+
+function gameWindow(group, game) {
+  if (!game?.date || !game?.time) return null;
+  const start = t2m(game.time);
+  if (start === null) return null;
+  const div = findDivision(group, game?.divisionId);
+  const dur = divGameMins(div);
+  return { start, end: start + dur };
+}
+
+function t2m(v) {
+  const norm = normalizeTime(v);
+  if (!norm) return null;
+  const m = norm.match(/^(\d{1,2}):(\d{2})$/);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+function windowsOverlap(a, b) {
+  return a && b && a.start < b.end && b.start < a.end;
+}
+function sharesSlot(group, g1, g2) {
+  if (!g1?.date || !g2?.date || g1.date !== g2.date) return false;
+  return windowsOverlap(gameWindow(group, g1), gameWindow(group, g2));
+}
+function windowOverlapsBlock(win, block) {
+  if (!win) return true;
+  const s = block.start ? t2m(block.start) : 0;
+  const e = block.end   ? t2m(block.end)   : 24*60;
+  return windowsOverlap(win, { start: s ?? 0, end: e ?? 24*60 });
+}
+
+// ─────────────────────────────────────────────
+//  Division helpers
+// ─────────────────────────────────────────────
+function findDivision(group, id) {
+  return (group.divisions || []).find(d => d.id === id) || null;
+}
+function sortedDivisions(divs) {
+  return divs.slice().sort((a, b) =>
+    (Number(a.priority||999) - Number(b.priority||999)) || String(a.name||"").localeCompare(String(b.name||""))
+  );
+}
+function divGameMins(div) {
+  if (!div) return DEFAULT_GAME_MINUTES;
+  const m = Number(div.gameMinutes || div.averageGameMinutes || div.durationMinutes || DEFAULT_GAME_MINUTES);
+  return Math.max(30, Math.min(300, Number.isFinite(m) ? m : DEFAULT_GAME_MINUTES));
+}
+
+// ─────────────────────────────────────────────
+//  Field helpers
+// ─────────────────────────────────────────────
+function findField(group, id) {
+  return (group.fields || []).find(f => f.id === id) || null;
+}
+function ensureField(group, name) {
+  ensureGroupDefaults(group);
+  const clean = String(name||"Field TBD").trim() || "Field TBD";
+  let existing = (group.fields||[]).find(f => f.name.toLowerCase() === clean.toLowerCase());
+  if (!existing) {
+    existing = { id: makeId(), name: clean };
+    group.fields.push(existing);
+  }
+  return existing;
+}
+function fieldName(group, game) {
+  const f = findField(group, game.fieldId);
+  return f ? f.name : (game.field || "Unlisted Field");
+}
+
+// ─────────────────────────────────────────────
+//  Sorting / grouping
+// ─────────────────────────────────────────────
+function sortedByField(group, games) {
+  return games.slice().sort((a, b) =>
+    String(fieldName(group,a)).localeCompare(String(fieldName(group,b)), undefined, {numeric:true})
+    || String(a.date||"").localeCompare(String(b.date||""))
+    || String(a.time||"").localeCompare(String(b.time||""))
+  );
+}
+function groupByField(group, games) {
+  return games.reduce((acc, g) => {
+    const f = fieldName(group, g);
+    if (!acc[f]) acc[f] = [];
+    acc[f].push(g);
+    return acc;
+  }, {});
+}
+function groupByDivision(group, games) {
+  const divs = sortedDivisions(group.divisions || []);
+  const grps = divs.map(d => ({
+    id:    d.id,
+    label: d.name,
+    meta:  `Officials needed: ${d.umpiresNeeded||2} | Priority: ${d.priority||1}`,
+    games: games.filter(g => g.divisionId === d.id)
+  })).filter(dg => dg.games.length);
+
+  const unassigned = games.filter(g => !g.divisionId || !findDivision(group, g.divisionId));
+  if (unassigned.length) grps.push({ id:"", label:"No Division", meta:"", games: unassigned });
+  return grps;
+}
+
+function uniqueDates(games) {
+  return [...new Set(games.map(g => g.date||"Date TBD"))].sort((a,b) => {
+    if (a === "Date TBD") return 1;
+    if (b === "Date TBD") return -1;
+    return a.localeCompare(b);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Call-out helpers
+// ─────────────────────────────────────────────
+function removeOfficialFromGame(game, offId) {
+  const a = normalizeGameAssignments(game);
+  let removed = 0;
+  Object.keys(a).forEach(k => { if (a[k] === offId) { a[k] = ""; removed++; } });
+  game.umpireIds = gameOfficialIds(game);
+  game.umpireId  = game.umpireIds[0] || "";
+  return removed;
+}
+
+function addCallOutBlock(off, date, start, end, notes) {
+  if (!off || !date) return false;
+  if (!Array.isArray(off.unavailableBlocks)) off.unavailableBlocks = [];
+  const block = { date, start: start||"", end: end||"", note: "Call out" + (notes ? ": " + notes : "") };
+  const exists = off.unavailableBlocks.some(b =>
+    b.date === date && (b.start||"") === (start||"") && (b.end||"") === (end||"") && String(b.note||"").startsWith("Call out")
+  );
+  if (!exists) off.unavailableBlocks.push(block);
+  off.updatedAt = new Date().toISOString();
+  return !exists;
+}
+
+function gameInCallOutWindow(game, date, start, end) {
+  if (!date || game.date !== date) return false;
+  if (!start && !end) return true;
+  if (!game.time) return true;
+  return windowOverlapsBlock({ start: t2m(game.time)||0, end: (t2m(game.time)||0) + DEFAULT_GAME_MINUTES }, {date, start, end});
+}
+
+// ─────────────────────────────────────────────
+//  Schedule view (print / export)
+// ─────────────────────────────────────────────
+function openScheduleView() {
+  const group = activeGroup();
+  if (!group) return;
+  renderScheduleView(group);
+  el("scheduleViewModal").classList.add("open");
+}
+
+function renderScheduleView(group) {
+  const games = (group.games||[]).slice().sort((a,b) =>
+    String(a.date||"").localeCompare(String(b.date||""))
+    || String(a.time||"").localeCompare(String(b.time||""))
+    || String(fieldName(group,a)).localeCompare(String(fieldName(group,b)), undefined, {numeric:true})
+  );
+  el("scheduleViewTitle").textContent = (group.name||"Group") + " — Schedule";
+  el("scheduleViewContent").innerHTML = scheduleWorkbookMarkup(group, games);
+}
+
+function scheduleWorkbookMarkup(group, games) {
+  if (!games.length) return '<div class="empty">No games yet.</div>';
+  const dates = uniqueDates(games);
+  return `<div class="workbook-view">
+    ${dates.map(d => {
+      const dg = games.filter(g => (g.date||"Date TBD") === d);
+      return dateSheetMarkup(group, d, dg);
+    }).join("")}
+    ${totalSheetMarkup(group, dates, games)}
+  </div>`;
+}
+
+function dateSheetMarkup(group, dateKey, games) {
+  const fieldNames = [...new Set(games.map(g => fieldName(group,g)))].sort((a,b) =>
+    a.localeCompare(b, undefined, {numeric:true})
+  );
+  return `<section class="sheet-view">
+    <h3 class="sheet-title">${esc(fmtDate(dateKey))} — Schedule</h3>
+    ${fieldNames.map(f => {
+      const fg = games.filter(g => fieldName(group,g) === f)
+        .sort((a,b) => String(a.time||"").localeCompare(String(b.time||"")));
+      const maxRoles = Math.max(1, fg.reduce((m,g) => Math.max(m, gameRolesForGame(group,g).length), 1));
+      const roles    = CREW_ROLES.slice(0, maxRoles);
+      return `<table class="excel-table">
+        <colgroup><col style="width:78px"><col style="width:140px">${roles.map(() => "<col>").join("")}</colgroup>
+        <thead>
+          <tr class="excel-field-name"><th colspan="${roles.length+2}">${esc(f)}</th></tr>
+          <tr class="excel-header"><th>Time</th><th>Game</th>${roles.map(r => `<th>${esc(r.label === "Home Plate" ? "Plate" : r.label)}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${fg.map(game => {
+            const a    = normalizeGameAssignments(game);
+            const avR  = gameRolesForGame(group, game);
+            const open = openRoleLabels(group, game);
+            return `<tr>
+              <td>${esc(fmtTime(game.time))}</td>
+              <td class="excel-game-cell">${esc(game.teamOne)} vs ${esc(game.teamTwo)}</td>
+              ${roles.map(role => {
+                if (!avR.some(r => r.key === role.key)) return "<td></td>";
+                const off = a[role.key] ? findOfficial(group, a[role.key]) : null;
+                return `<td>
+                  <select class="game-role-assign excel-assignment-select" data-game-id="${game.id}" data-role="${role.key}">
+                    ${assignmentOptions(group, game, role.key)}
+                  </select>
+                  <span class="print-official-name">${esc(off ? off.name : "")}</span>
+                </td>`;
+              }).join("")}
+            </tr>
+            ${open.length ? `<tr class="excel-need-row"><td colspan="${roles.length+2}">Needs: ${esc(open.join(", "))}</td></tr>` : ""}`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    }).join("")}
+    ${usedOfficialsMarkup(group, games)}
+  </section>`;
+}
+
+function usedOfficialsMarkup(group, games) {
+  const counts = {};
+  games.forEach(g => gameOfficialIds(g).forEach(id => { counts[id] = (counts[id]||0) + 1; }));
+  const entries = Object.keys(counts).map(id => {
+    const off = findOfficial(group, id);
+    return { name: off ? off.name : "Unknown", count: counts[id] };
+  }).sort((a,b) => a.name.localeCompare(b.name));
+
+  return `<table class="excel-table">
+    <thead>
+      <tr><th class="used-officials-title" colspan="2">Officials Used</th></tr>
+      <tr class="excel-header"><th>Official</th><th>Games</th></tr>
+    </thead>
+    <tbody>
+      ${entries.length
+        ? entries.map(e => `<tr><td>${esc(e.name)}</td><td>${e.count}</td></tr>`).join("")
+        : '<tr><td colspan="2">No officials assigned</td></tr>'}
+    </tbody>
+  </table>`;
+}
+
+function totalSheetMarkup(group, dates, games) {
+  const ids = [...new Set(games.flatMap(g => gameOfficialIds(g)))];
+  const officials = ids.map(id => {
+    const off = findOfficial(group, id);
+    return { id, name: off ? off.name : "Unknown" };
+  }).sort((a,b) => a.name.localeCompare(b.name));
+
+  return `<section class="sheet-view">
+    <h3 class="sheet-title">Grand Total — Official Game Counts</h3>
+    <table class="excel-table">
+      <thead>
+        <tr class="excel-header">
+          <th>Official</th>
+          ${dates.map(d => `<th>${esc(fmtDate(d))}</th>`).join("")}
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${officials.length
+          ? officials.map(off => {
+              const counts = dates.map(d => games.filter(g => (g.date||"Date TBD") === d && gameOfficialIds(g).includes(off.id)).length);
+              const total  = counts.reduce((s,c) => s+c, 0);
+              return `<tr>
+                <td>${esc(off.name)}</td>
+                ${counts.map(c => `<td>${c}</td>`).join("")}
+                <td><strong>${total}</strong></td>
+              </tr>`;
+            }).join("")
+          : `<tr><td colspan="${dates.length+2}">No officials assigned</td></tr>`}
+      </tbody>
+    </table>
+  </section>`;
+}
+
+function exportExcel(group) {
+  if (!group) return;
+  const games = (group.games||[]).slice().sort((a,b) =>
+    String(a.date||"").localeCompare(String(b.date||""))
+    || String(a.time||"").localeCompare(String(b.time||""))
+  );
+  if (!games.length) { showMsg("scheduleViewMessage","Add games before exporting.", "error"); return; }
+  const xml = buildExcelWorkbook(group, games);
+  const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href  = URL.createObjectURL(blob);
+  link.download = safeName(group.name || "schedule") + "-schedule.xls";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+}
+
+function buildExcelWorkbook(group, games) {
+  const usedNames = [];
+  const dates     = uniqueDates(games);
+  const sheets    = dates.map(d => {
+    const dg = games.filter(g => (g.date||"Date TBD") === d);
+    return buildExcelSheet(group, d, dg, usedNames);
+  }).join("");
+
+  return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+<Style ss:ID="Title"><Font ss:Bold="1" ss:Size="14" ss:Color="#FFFFFF"/><Interior ss:Color="#0F58D9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>
+<Style ss:ID="Field"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#061A2D" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>
+<Style ss:ID="H"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#2478FF" ss:Pattern="Solid"/></Style>
+<Style ss:ID="C"><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9E6F7"/></Borders></Style>
+<Style ss:ID="G"><Alignment ss:WrapText="1"/><Font ss:Size="8"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9E6F7"/></Borders></Style>
+</Styles>
+${sheets}
+${buildTotalSheet(group, dates, games, usedNames)}
+</Workbook>`;
+}
+
+function buildExcelSheet(group, dateKey, games, usedNames) {
+  const name      = uniqueSheetName(fmtDate(dateKey).replace(",",""), usedNames);
+  const fieldKeys = [...new Set(games.map(g => fieldName(group,g)))].sort((a,b) => a.localeCompare(b,undefined,{numeric:true}));
+  let rows = `<Row><Cell ss:StyleID="Title" ss:MergeAcross="7"><Data ss:Type="String">${xesc(fmtDate(dateKey))} Schedule</Data></Cell></Row><Row/>`;
+
+  fieldKeys.forEach(f => {
+    const fg       = games.filter(g => fieldName(group,g) === f).sort((a,b) => String(a.time||"").localeCompare(String(b.time||"")));
+    const maxRoles = Math.max(1, fg.reduce((m,g) => Math.max(m, gameRolesForGame(group,g).length), 1));
+    const roles    = CREW_ROLES.slice(0, maxRoles);
+
+    rows += `<Row><Cell ss:StyleID="Field" ss:MergeAcross="${roles.length+1}"><Data ss:Type="String">${xesc(f)}</Data></Cell></Row>`;
+    rows += `<Row><Cell ss:StyleID="H"><Data ss:Type="String">Time</Data></Cell><Cell ss:StyleID="H"><Data ss:Type="String">Game</Data></Cell>${roles.map(r => `<Cell ss:StyleID="H"><Data ss:Type="String">${xesc(r.label === "Home Plate" ? "Plate" : r.label)}</Data></Cell>`).join("")}</Row>`;
+
+    fg.forEach(game => {
+      const a = normalizeGameAssignments(game);
+      rows += `<Row><Cell ss:StyleID="C"><Data ss:Type="String">${xesc(fmtTime(game.time))}</Data></Cell><Cell ss:StyleID="G"><Data ss:Type="String">${xesc(game.teamOne+" vs "+game.teamTwo)}</Data></Cell>${roles.map(role => {
+        if (!gameRolesForGame(group,game).some(r => r.key === role.key)) return '<Cell ss:StyleID="C"><Data ss:Type="String"></Data></Cell>';
+        const off = a[role.key] ? findOfficial(group, a[role.key]) : null;
+        return `<Cell ss:StyleID="C"><Data ss:Type="String">${xesc(off ? off.name : "")}</Data></Cell>`;
+      }).join("")}</Row>`;
+    });
+    rows += `<Row/>`;
+  });
+
+  // Used officials table
+  const counts = {};
+  games.forEach(g => gameOfficialIds(g).forEach(id => { counts[id] = (counts[id]||0)+1; }));
+  rows += `<Row><Cell ss:StyleID="Field" ss:MergeAcross="1"><Data ss:Type="String">Officials Used</Data></Cell></Row>`;
+  rows += `<Row><Cell ss:StyleID="H"><Data ss:Type="String">Official</Data></Cell><Cell ss:StyleID="H"><Data ss:Type="String">Games</Data></Cell></Row>`;
+  Object.keys(counts).sort().forEach(id => {
+    const off = findOfficial(group, id);
+    rows += `<Row><Cell ss:StyleID="C"><Data ss:Type="String">${xesc(off ? off.name : "Unknown")}</Data></Cell><Cell ss:StyleID="C"><Data ss:Type="Number">${counts[id]}</Data></Cell></Row>`;
+  });
+
+  return `<Worksheet ss:Name="${xesc(name)}"><Table>${rows}</Table></Worksheet>`;
+}
+
+function buildTotalSheet(group, dates, games, usedNames) {
+  const name = uniqueSheetName("Total", usedNames);
+  const ids  = [...new Set(games.flatMap(g => gameOfficialIds(g)))];
+  const offs = ids.map(id => { const o = findOfficial(group,id); return {id, name: o ? o.name : "Unknown"}; }).sort((a,b) => a.name.localeCompare(b.name));
+
+  let rows = `<Row><Cell ss:StyleID="Title" ss:MergeAcross="${dates.length+1}"><Data ss:Type="String">Grand Total — Official Game Counts</Data></Cell></Row><Row/>`;
+  rows += `<Row><Cell ss:StyleID="H"><Data ss:Type="String">Official</Data></Cell>${dates.map(d => `<Cell ss:StyleID="H"><Data ss:Type="String">${xesc(fmtDate(d))}</Data></Cell>`).join("")}<Cell ss:StyleID="H"><Data ss:Type="String">Total</Data></Cell></Row>`;
+
+  offs.forEach(off => {
+    const counts = dates.map(d => games.filter(g => (g.date||"Date TBD") === d && gameOfficialIds(g).includes(off.id)).length);
+    const total  = counts.reduce((s,c) => s+c, 0);
+    rows += `<Row><Cell ss:StyleID="C"><Data ss:Type="String">${xesc(off.name)}</Data></Cell>${counts.map(c => `<Cell ss:StyleID="C"><Data ss:Type="Number">${c}</Data></Cell>`).join("")}<Cell ss:StyleID="C"><Data ss:Type="Number">${total}</Data></Cell></Row>`;
+  });
+
+  return `<Worksheet ss:Name="${xesc(name)}"><Table>${rows}</Table></Worksheet>`;
+}
+
+// ─────────────────────────────────────────────
+//  Bulk game import
+// ─────────────────────────────────────────────
+function buildBulkGames(rawText, group, divId) {
+  const lines = rawText.split(/\r?\n/).map(l => l.replace(/\s+/g," ").trim()).filter(Boolean);
+  const games = [];
+  let curDate = "";
+
+  lines.forEach(line => {
+    if (/game/i.test(line) && /time/i.test(line)) return; // header
+    const dateOnly = normDate(line);
+    if (dateOnly && !normTime(line)) { curDate = dateOnly; return; }
+
+    const parts = splitLine(line);
+    const dateIdx  = parts.findIndex(p => normDate(p));
+    const timeIdx  = parts.findIndex(p => normTime(p));
+    if (timeIdx < 0) return;
+
+    const fieldIdx = parts.findIndex((p,i) => i !== timeIdx && /field|court|diamond|park|rink|\bfld\b/i.test(p));
+    const date     = dateIdx >= 0 ? normDate(parts[dateIdx]) : curDate;
+    const time     = normTime(parts[timeIdx]);
+    const field    = fieldIdx >= 0 ? parts[fieldIdx] : (parts[2] || "Field TBD");
+    const remaining = parts.filter((_,i) => i !== dateIdx && i !== timeIdx && i !== fieldIdx);
+    const teamOne  = remaining[0] || "Team 1";
+    const teamTwo  = remaining[1] || "Team 2";
+    const level    = remaining.slice(2).join(" ");
+
+    if (!teamOne && !teamTwo && !field) return;
+    const f = ensureField(group, field);
+    games.push({
+      id: makeId(), groupId: group.id, divisionId: divId,
+      date, time, fieldId: f.id, field: f.name,
+      teamOne, teamTwo, level,
+      assignments: emptyAssignments(), umpireIds: [], umpireId: "",
+      source: "bulk", createdAt: new Date().toISOString()
+    });
+  });
+  return games;
+}
+
+function splitLine(line) {
+  const byTab   = line.split("\t").map(s => s.trim()).filter(Boolean);
+  if (byTab.length >= 3) return byTab;
+  const byComma = line.split(",").map(s => s.trim()).filter(Boolean);
+  if (byComma.length >= 3) return byComma;
+  return line.split(/\s{2,}|\s+\|\s+/).map(s => s.trim()).filter(Boolean);
+}
+
+// ─────────────────────────────────────────────
+//  Date / time formatting & parsing
+// ─────────────────────────────────────────────
+function normDate(v) {
+  const t = String(v||"").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const monMatch = t.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{2,4}))?\b/i);
+  if (monMatch) {
+    const monMap = {jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
+    const yr = monMatch[3] ? (monMatch[3].length===2?"20"+monMatch[3]:monMatch[3]) : String(new Date().getFullYear());
+    const mo = monMap[monMatch[1].toLowerCase().slice(0,3)];
+    return `${yr}-${mo}-${monMatch[2].padStart(2,"0")}`;
+  }
+  const m = t.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);
+  if (!m) return "";
+  const yr = m[3] ? (m[3].length===2?"20"+m[3]:m[3]) : String(new Date().getFullYear());
+  return `${yr}-${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}`;
+}
+
+function normTime(v) {
+  const t = String(v||"").trim();
+  if (/\d{1,4}[/-]\d{1,2}/.test(t)) return "";
+  if (!/(\d{1,2}:\d{2}|\b\d{1,2}\s*(?:AM|PM)\b)/i.test(t)) return "";
+  const m = t.match(/\b(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?\b/i);
+  if (!m) return "";
+  let hr = Number(m[1]);
+  const mn = m[2] || "00";
+  const mer = (m[3]||"").toUpperCase();
+  if (mer === "PM" && hr < 12) hr += 12;
+  if (mer === "AM" && hr === 12) hr = 0;
+  if (hr > 23) return "";
+  return `${String(hr).padStart(2,"0")}:${mn}`;
+}
+
+function normalizeTime(v) { return normTime(v); }
+
+function fmtDate(v) {
+  if (!v || v === "Date TBD") return "Date TBD";
+  const p = String(v).split("-");
+  if (p.length === 3) {
+    return new Date(Number(p[0]), Number(p[1])-1, Number(p[2]))
+      .toLocaleDateString("en-US", { month:"short", day:"2-digit", year:"numeric" });
+  }
+  return v;
+}
+function fmtTime(v) {
+  if (!v) return "Time TBD";
+  const norm = normTime(v) || v;
+  const m = String(norm).match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return v;
+  let hr = Number(m[1]);
+  const suf = hr >= 12 ? "PM" : "AM";
+  hr = hr % 12 || 12;
+  return `${hr}:${m[2]} ${suf}`;
+}
+function fmtBlock(b) {
+  const t = [b.start||"Any time", b.end||""].filter(Boolean).join("–");
+  return `${b.date} ${t}${b.note ? " ("+b.note+")" : ""}`;
+}
+
+// ─────────────────────────────────────────────
+//  Enforce limits & defaults
+// ─────────────────────────────────────────────
+function ensureGroupDefaults(group) {
+  ["divisions","games","umpires","reports","fields"].forEach(k => {
+    if (!Array.isArray(group[k])) group[k] = [];
+  });
+  if (!group.autoAssignMode) group.autoAssignMode = "account";
+  // Clean old ejection reports
+  group.reports = (group.reports || []).filter(r => r.reportType === "official_call_out");
+}
+
+function enforceDivisionCrewLimits(group) {
+  (group.games || []).forEach(game => {
+    const a    = normalizeGameAssignments(game);
+    const keys = gameRolesForGame(group, game).map(r => r.key);
+    CREW_ROLES.forEach(r => { if (!keys.includes(r.key)) a[r.key] = ""; });
+    game.umpireIds = gameOfficialIds(game);
+    game.umpireId  = game.umpireIds[0] || "";
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Call out official select
+// ─────────────────────────────────────────────
+function renderCallOutOfficialSelect(group) {
+  el("callOutOfficial").innerHTML =
+    ['<option value="">Choose official</option>']
+    .concat(sortedBySeniority(group.umpires||[]).map(u =>
+      `<option value="${u.id}">${esc(u.name)} (seniority ${seniority(u)})</option>`
+    )).join("");
+}
+
+// ─────────────────────────────────────────────
+//  Official modal
+// ─────────────────────────────────────────────
+function resetOfficialModal() {
+  pendingAvailability = [];
+  editingOfficialId   = "";
+  currentOfficialStep = 0;
+  el("umpireForm").reset();
+  el("officialCanPlate").value           = "yes";
+  el("officialCanBases").value           = "yes";
+  el("umpirePlateRating").value          = "5";
+  el("umpireBaseRating").value           = "5";
+  el("umpireProfessionalismRating").value = "5";
+  el("officialModalTitle").textContent   = "Add Official";
+  syncRatingLocks();
+  renderAvailabilityDraft();
+  showOfficialStep(0);
+}
+
+function openOfficialEditor(offId) {
+  const group = activeGroup();
+  if (!group) return;
+  const off = findOfficial(group, offId);
+  if (!off) return;
+  editingOfficialId   = off.id;
+  pendingAvailability = (off.unavailableBlocks||[]).map(b => ({...b}));
+  el("officialModalTitle").textContent     = "Edit Official";
+  el("umpireName").value                   = off.name||"";
+  el("umpireEmail").value                  = off.email||"";
+  el("umpirePhone").value                  = off.phone||"";
+  el("officialCanPlate").value             = canWork(off,"plate") ? "yes" : "no";
+  el("officialCanBases").value             = canWork(off,"base")  ? "yes" : "no";
+  el("umpirePlateRating").value            = officialRating(off,"plate");
+  el("umpireBaseRating").value             = officialRating(off,"base");
+  el("umpireProfessionalismRating").value  = officialRating(off,"professionalism");
+  syncRatingLocks();
+  renderAvailabilityDraft();
+  showOfficialStep(0);
+  el("addOfficialModal").classList.add("open");
+}
+
+function showOfficialStep(step) {
+  currentOfficialStep = Math.max(0, Math.min(2, Number(step)||0));
+  document.querySelectorAll(".wizard-step").forEach(b => b.classList.toggle("active", Number(b.dataset.officialStep) === currentOfficialStep));
+  document.querySelectorAll(".official-pane").forEach(p => p.classList.toggle("active", Number(p.dataset.officialPane) === currentOfficialStep));
+  el("officialBack").style.display = currentOfficialStep === 0 ? "none" : "inline-flex";
+  el("officialNext").style.display = currentOfficialStep === 2 ? "none" : "inline-flex";
+  el("officialSave").style.display = currentOfficialStep === 2 ? "inline-flex" : "none";
+}
+
+function syncRatingLocks() {
+  syncLock("officialCanPlate", "umpirePlateRating");
+  syncLock("officialCanBases", "umpireBaseRating");
+  updateRatingOutputs();
+}
+function syncLock(selId, rangeId) {
+  const sel   = el(selId);
+  const range = el(rangeId);
+  if (!sel || !range) return;
+  const locked = sel.value === "no";
+  if (locked) range.value = "0";
+  range.disabled = locked;
+  range.closest(".rating-slider")?.classList.toggle("locked", locked);
+}
+function updateRatingOutputs() {
+  [["umpirePlateRating","umpirePlateRatingValue"],["umpireBaseRating","umpireBaseRatingValue"],["umpireProfessionalismRating","umpireProfessionalismRatingValue"]]
+    .forEach(([iId, oId]) => { const i = el(iId); const o = el(oId); if (i && o) o.textContent = i.value; });
+}
+
+function renderAvailabilityDraft() {
+  el("availabilityDraftList").innerHTML = pendingAvailability.length
+    ? pendingAvailability.map((b, i) => `<div class="availability-row">
+        <span>${esc(fmtBlock(b))}</span>
+        <button class="btn outline sm remove-availability" type="button" data-index="${i}">Remove</button>
+      </div>`).join("")
+    : '<div class="empty">No blocks — this official is available all the time.</div>';
+}
+
+function addPendingBlock() {
+  const slot = {
+    date:  el("availabilityDate").value,
+    start: el("availabilityStart").value,
+    end:   el("availabilityEnd").value,
+    note:  el("availabilityNote").value.trim()
+  };
+  if (!slot.date) return false;
+  pendingAvailability.push(slot);
+  el("availabilityDate").value = "";
+  el("availabilityStart").value = "";
+  el("availabilityEnd").value = "";
+  el("availabilityNote").value = "";
+  renderAvailabilityDraft();
+  return true;
+}
+
+// ─────────────────────────────────────────────
+//  Division modal
+// ─────────────────────────────────────────────
+function resetDivisionModal() {
+  editingDivisionId = "";
+  el("divisionForm").reset();
+  el("divisionUmpiresNeeded").value = "2";
+  el("divisionPriority").value      = "1";
+  el("divisionGameMinutes").value   = String(DEFAULT_GAME_MINUTES);
+  el("divisionModalTitle").textContent = "Add Division";
+  el("deleteDivisionBtn").style.display = "none";
+}
+function openDivisionEditor(divId) {
+  const group = activeGroup();
+  if (!group) return;
+  const div = findDivision(group, divId);
+  if (!div) return;
+  editingDivisionId = div.id;
+  el("divisionModalTitle").textContent  = "Edit Division";
+  el("divisionName").value              = div.name||"";
+  el("divisionUmpiresNeeded").value     = div.umpiresNeeded||"2";
+  el("divisionPriority").value          = div.priority||"1";
+  el("divisionGameMinutes").value       = String(divGameMins(div));
+  el("divisionNotes").value             = div.notes||"";
+  el("deleteDivisionBtn").style.display = "inline-flex";
+  el("divisionModal").classList.add("open");
+}
+
+// ─────────────────────────────────────────────
+//  Utilities
+// ─────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function esc(v) {
+  return String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function xesc(v) {
+  return String(v??""  ).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&apos;");
+}
+function capitalize(v) { return String(v||"").charAt(0).toUpperCase() + String(v||"").slice(1); }
+function safeName(v) { return String(v||"schedule").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+function uniqueSheetName(name, used) {
+  const base = String(name||"Sheet").replace(/[\\\/\?\*\[\]:]/g," ").replace(/\s+/g," ").trim().slice(0,31)||"Sheet";
+  let cand = base, idx = 2;
+  while (used.includes(cand)) { const suf = " "+idx; cand = base.slice(0,31-suf.length)+suf; idx++; }
+  used.push(cand);
+  return cand;
+}
+
+function showMsg(id, text, type, duration = 4000) {
+  const e = el(id);
+  if (!e) return;
+  e.textContent  = text;
+  e.className    = "message show " + type;
+  if (duration > 0) setTimeout(() => { e.className = "message"; e.textContent = ""; }, duration);
+}
+
+function updateGroups() {
+  saveGroups();
+  renderAll();
+  renderGroupHome();
+}
+
+// ─────────────────────────────────────────────
+//  Event listeners
+// ─────────────────────────────────────────────
+
+// Reset
+el("resetButton").addEventListener("click", () => {
+  if (!confirm("Clear all saved data from this browser?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(PREFS_KEY);
+  groups = []; accountPreferences = null; activeGroupId = "";
+  window.location.hash = "#dashboard";
+  renderAll(); route();
+});
+
+// Group search
+el("groupSearch").addEventListener("input", renderGroupsView);
+
+// Open create group
+el("openCreateGroup").addEventListener("click", () => {
+  editingGroupId = "";
+  el("createGroupForm").reset();
+  el("groupModalTitle").textContent   = "Create Group";
+  el("saveGroupButton").textContent   = "Create Group";
+  el("createGroupModal").classList.add("open");
+});
+el("closeCreateGroup").addEventListener("click", () => el("createGroupModal").classList.remove("open"));
+
+// Edit group
+el("editGroupBtn").addEventListener("click", () => {
+  const group = activeGroup();
+  if (!group) return;
+  editingGroupId = group.id;
+  el("groupModalTitle").textContent  = "Edit Group";
+  el("saveGroupButton").textContent  = "Save Group";
+  el("groupName").value  = group.name||"";
+  el("groupSport").value = group.sport||"";
+  el("groupType").value  = group.type||"static";
+  el("createGroupModal").classList.add("open");
+});
+
+// Create/Edit group submit
+el("createGroupForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name  = el("groupName").value.trim();
+  const sport = el("groupSport").value.trim();
+  const type  = el("groupType").value;
+  if (!name || !sport) { showMsg("groupMessage","Group name and sport are required.","error",-1); return; }
+
+  if (editingGroupId) {
+    const g = groups.find(x => x.id === editingGroupId);
+    if (g) { g.name = name; g.sport = sport; g.type = type; g.updatedAt = new Date().toISOString(); }
+    updateGroups();
+    el("createGroupModal").classList.remove("open");
+    return;
+  }
+  const group = {
+    id: makeId(), name, sport, type,
+    fields:[], divisions:[], umpires:[], games:[], reports:[],
+    autoAssignMode:"account",
+    createdAt: new Date().toISOString()
+  };
+  groups.unshift(group);
+  activeGroupId  = group.id;
+  activeGroupTab = "schedule";
+  saveGroups();
+  el("createGroupModal").classList.remove("open");
+  window.location.hash = "#group/" + group.id;
+  renderAll();
+});
+
+// Click group card
+el("createdGroupsList").addEventListener("click", e => {
+  const card = e.target.closest("[data-group-id]");
+  if (!card) return;
+  activeGroupId  = card.dataset.groupId;
+  activeGroupTab = "schedule";
+  activeScheduleDate = "";
+  window.location.hash = "#group/" + card.dataset.groupId;
+});
+
+// Group tab buttons (nav links inside group home)
+document.querySelectorAll("[data-group-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    activeGroupTab = btn.dataset.groupTab;
+    renderGroupHome();
+  });
+});
+
+// Date tabs
+el("dateTabs").addEventListener("click", e => {
+  const btn = e.target.closest("[data-schedule-date]");
+  if (!btn) return;
+  activeScheduleDate = btn.dataset.scheduleDate;
+  const group = activeGroup();
+  if (group) renderDateScheduleHome(group);
+});
+
+// Schedule view
+el("openScheduleView").addEventListener("click", openScheduleView);
+el("closeScheduleView").addEventListener("click", () => el("scheduleViewModal").classList.remove("open"));
+el("printScheduleView").addEventListener("click", () => {
+  const group = activeGroup();
+  if (!group) return;
+  renderScheduleView(group);
+  document.body.classList.add("printing-schedule");
+  window.print();
+  setTimeout(() => document.body.classList.remove("printing-schedule"), 500);
+});
+el("exportExcelFromView").addEventListener("click", () => exportExcel(activeGroup()));
+
+// Auto assign
+el("runAutoAssign").addEventListener("click", () => {
+  const group = activeGroup();
+  if (!group) return;
+  runAutoAssignForGroup(group);
+});
+el("reassignAutoAssign").addEventListener("click", () => {
+  const group = activeGroup();
+  if (!group) return;
+  if (!confirm("This will clear ALL current assignments and re-run Auto Assign. Continue?")) return;
+  runAutoAssignForGroup(group, { clearExisting: true });
+});
+el("useAccountPreferences").addEventListener("click", () => {
+  const group = activeGroup();
+  if (!group) return;
+  group.autoAssignMode = "account";
+  updateGroups();
+  showMsg("autoAssignMessage","Now using default account preferences.","success");
+});
+el("openGroupPreferences").addEventListener("click", () => openPreferenceEditor("group"));
+el("openAccountPreferences").addEventListener("click", () => openPreferenceEditor("account"));
+
+// Preference form
+el("closePreferenceModal").addEventListener("click", () => el("preferenceModal").classList.remove("open"));
+el("preferenceForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const answers = collectPreferenceAnswers();
+  if (preferenceContext === "group") {
+    const group = activeGroup();
+    if (!group) return;
+    group.autoAssignMode       = "custom";
+    group.autoAssignPreferences = answers;
+    updateGroups();
+    showMsg("autoAssignMessage","Custom group preferences saved.","success");
+  } else {
+    accountPreferences = answers;
+    savePreferences();
+    renderAccountPreferenceSummary();
+  }
+  el("preferenceModal").classList.remove("open");
+});
+
+// Add official
+el("openAddOfficial").addEventListener("click", () => {
+  resetOfficialModal();
+  el("addOfficialModal").classList.add("open");
+});
+el("closeAddOfficial").addEventListener("click", () => {
+  el("addOfficialModal").classList.remove("open");
+  resetOfficialModal();
+});
+el("officialBack").addEventListener("click", () => showOfficialStep(currentOfficialStep - 1));
+el("officialNext").addEventListener("click", () => {
+  if (currentOfficialStep === 0 && !el("umpireName").value.trim()) {
+    showMsg("officialModalMessage","Name is required.","error",-1); return;
+  }
+  showOfficialStep(currentOfficialStep + 1);
+});
+document.querySelectorAll(".wizard-step").forEach(btn => {
+  btn.addEventListener("click", () => showOfficialStep(Number(btn.dataset.officialStep)));
+});
+["umpirePlateRating","umpireBaseRating","umpireProfessionalismRating"].forEach(id => {
+  el(id).addEventListener("input", updateRatingOutputs);
+});
+["officialCanPlate","officialCanBases"].forEach(id => {
+  el(id).addEventListener("change", syncRatingLocks);
+});
+el("addAvailabilitySlot").addEventListener("click", () => {
+  if (!addPendingBlock()) showMsg("officialModalMessage","Choose a date for the block.","error",-1);
+});
+el("availabilityDraftList").addEventListener("click", e => {
+  const btn = e.target.closest(".remove-availability");
+  if (!btn) return;
+  pendingAvailability.splice(Number(btn.dataset.index), 1);
+  renderAvailabilityDraft();
+});
+
+// Save official
+el("umpireForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const group = activeGroup();
+  if (!group) return;
+  syncRatingLocks();
+  addPendingBlock(); // capture any in-progress block
+  const name = el("umpireName").value.trim();
+  if (!name) { showMsg("officialModalMessage","Name is required.","error",-1); return; }
+
+  const canPlate = el("officialCanPlate").value === "yes";
+  const canBase  = el("officialCanBases").value === "yes";
+  const ratings  = {
+    plate:          canPlate ? clampR(el("umpirePlateRating").value)         : 0,
+    base:           canBase  ? clampR(el("umpireBaseRating").value)          : 0,
+    professionalism: clampR(el("umpireProfessionalismRating").value)
+  };
+  const data = {
+    name, email: el("umpireEmail").value.trim(), phone: el("umpirePhone").value.trim(),
+    capabilities: { plate: canPlate, base: canBase },
+    ratings,
+    unavailableBlocks: pendingAvailability.slice(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const wasEditing = Boolean(editingOfficialId);
+  if (editingOfficialId) {
+    const existing = findOfficial(group, editingOfficialId);
+    if (existing) Object.assign(existing, data);
+  } else {
+    group.umpires.push({ id: makeId(), groupId: group.id, ...data, createdAt: new Date().toISOString() });
+  }
+
+  updateGroups();
+  el("addOfficialModal").classList.remove("open");
+  resetOfficialModal();
+  showMsg("umpireMessage", wasEditing ? "Official updated." : "Official added.", "success");
+});
+
+// Roster – edit & delete
+el("rosterList").addEventListener("click", e => {
+  const editBtn   = e.target.closest(".edit-official");
+  const deleteBtn = e.target.closest(".delete-official");
+  if (editBtn)   { openOfficialEditor(editBtn.dataset.officialId); return; }
+  if (deleteBtn) {
+    if (!confirm("Remove this official from the group? Their assignments will also be removed.")) return;
+    const group = activeGroup();
+    if (!group) return;
+    const id = deleteBtn.dataset.officialId;
+    group.umpires = (group.umpires||[]).filter(u => u.id !== id);
+    (group.games||[]).forEach(game => removeOfficialFromGame(game, id));
+    updateGroups();
+  }
+});
+
+// Division modal
+el("openDivisionModal").addEventListener("click", () => {
+  resetDivisionModal();
+  el("divisionModal").classList.add("open");
+});
+el("closeDivisionModal").addEventListener("click", () => { el("divisionModal").classList.remove("open"); resetDivisionModal(); });
+el("divisionList").addEventListener("click", e => {
+  const btn = e.target.closest(".edit-division");
+  if (btn) openDivisionEditor(btn.dataset.divisionId);
+});
+el("deleteDivisionBtn").addEventListener("click", () => {
+  if (!editingDivisionId) return;
+  const group = activeGroup();
+  if (!group) return;
+  const div = findDivision(group, editingDivisionId);
+  if (!div) return;
+  const gameCount = (group.games||[]).filter(g => g.divisionId === editingDivisionId).length;
+  if (!confirm(`Delete division "${div.name}"? ${gameCount > 0 ? gameCount + " games will lose their division." : ""}`)) return;
+  group.divisions = group.divisions.filter(d => d.id !== editingDivisionId);
+  updateGroups();
+  el("divisionModal").classList.remove("open");
+  resetDivisionModal();
+  showMsg("divisionMessage","Division deleted.","success");
+});
+el("divisionForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const group = activeGroup();
+  if (!group) return;
+  ensureGroupDefaults(group);
+  const name = el("divisionName").value.trim();
+  if (!name) { showMsg("divisionModalMessage","Division name is required.","error",-1); return; }
+  const mins = Number(el("divisionGameMinutes").value);
+  if (!mins || mins < 30) { showMsg("divisionModalMessage","Game duration must be at least 30 minutes.","error",-1); return; }
+
+  const data = {
+    name, umpiresNeeded: el("divisionUmpiresNeeded").value,
+    priority: el("divisionPriority").value,
+    gameMinutes: el("divisionGameMinutes").value,
+    notes: el("divisionNotes").value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+  if (editingDivisionId) {
+    const existing = findDivision(group, editingDivisionId);
+    if (existing) Object.assign(existing, data);
+  } else {
+    group.divisions.push({ id: makeId(), ...data, createdAt: new Date().toISOString() });
+  }
+  updateGroups();
+  el("divisionModal").classList.remove("open");
+  resetDivisionModal();
+  showMsg("divisionMessage","Division saved.","success");
+});
+
+// Add single game
+el("gameForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const group = activeGroup();
+  if (!group) return;
+  const divId = el("gameDivision").value;
+  if (!divId) { showMsg("gameMessage","Select a division first.","error"); return; }
+  const fieldTxt = el("gameField").value.trim();
+  if (!fieldTxt) { showMsg("gameMessage","Field name is required.","error"); return; }
+  const f = ensureField(group, fieldTxt);
+  const game = {
+    id: makeId(), groupId: group.id, divisionId: divId,
+    date: el("gameDate").value, time: el("gameTime").value,
+    fieldId: f.id, field: f.name,
+    teamOne: el("teamOne").value.trim(), teamTwo: el("teamTwo").value.trim(),
+    level: el("gameLevel").value.trim(),
+    assignments: emptyAssignments(), umpireIds:[], umpireId:"",
+    source:"single", createdAt: new Date().toISOString()
+  };
+  if (!game.teamOne || !game.teamTwo) { showMsg("gameMessage","Both team names are required.","error"); return; }
+  group.games.push(game);
+  updateGroups();
+  e.target.reset();
+  showMsg("gameMessage","Game added.","success");
+});
+
+// Bulk import
+el("bulkGameForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const group = activeGroup();
+  if (!group) return;
+  const divId = el("bulkDivision").value;
+  if (!divId) { showMsg("bulkGameMessage","Select a division first.","error"); return; }
+  const games = buildBulkGames(el("bulkGamesText").value, group, divId);
+  if (!games.length) { showMsg("bulkGameMessage","No games found. Check your paste format.","error"); return; }
+  group.games.push(...games);
+  updateGroups();
+  e.target.reset();
+  showMsg("bulkGameMessage",`Imported ${games.length} game${games.length===1?"":"s"}.`,"success");
+});
+
+// Assignment changes (board + schedule view)
+function handleAssignmentChange(e) {
+  if (!e.target.classList.contains("game-role-assign")) return;
+  const isView   = e.currentTarget.id === "scheduleViewContent";
+  const msgId    = isView ? "scheduleViewMessage" : "gameMessage";
+  const group    = activeGroup();
+  if (!group) return;
+  const game     = (group.games||[]).find(g => g.id === e.target.dataset.gameId);
+  if (!game) return;
+  const a        = normalizeGameAssignments(game);
+  const roleKey  = e.target.dataset.role;
+  const selId    = e.target.value;
+  const role     = CREW_ROLES.find(r => r.key === roleKey) || { type:"base" };
+
+  if (selId) {
+    const off = findOfficial(group, selId);
+    if (Object.keys(a).some(k => k !== roleKey && a[k] === selId)) {
+      showMsg(msgId,"That official is already assigned to another role on this game.","error");
+      renderGroupHome(); if(isView) renderScheduleView(group);
+      return;
+    }
+    if (off && !canWork(off, role.type)) {
+      showMsg(msgId,"That official is not approved for this position.","error");
+      renderGroupHome(); if(isView) renderScheduleView(group);
+      return;
+    }
+    if (off && !availableForGame(group, off, game)) {
+      showMsg(msgId,"That official has an unavailable block for this game.","error");
+      renderGroupHome(); if(isView) renderScheduleView(group);
+      return;
+    }
+    if (hasConflict(group, selId, game.id, game)) {
+      showMsg(msgId,"That official is already assigned to an overlapping game.","error");
+      renderGroupHome(); if(isView) renderScheduleView(group);
+      return;
+    }
+  }
+  a[roleKey]     = selId;
+  game.umpireIds = gameOfficialIds(game);
+  game.umpireId  = game.umpireIds[0] || "";
+  updateGroups();
+  if (isView) { renderScheduleView(group); showMsg("scheduleViewMessage","Assignment updated.","success"); }
+}
+
+el("scheduleList").addEventListener("change", handleAssignmentChange);
+el("scheduleViewContent").addEventListener("change", handleAssignmentChange);
+
+// Delete game
+el("scheduleList").addEventListener("click", e => {
+  const btn = e.target.closest(".delete-game");
+  if (!btn) return;
+  const group = activeGroup();
+  if (!group) return;
+  if (!confirm("Remove this game?")) return;
+  group.games = (group.games||[]).filter(g => g.id !== btn.dataset.gameId);
+  updateGroups();
+});
+
+// Call out form
+el("callOutForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const group    = activeGroup();
+  if (!group) return;
+  const offId    = el("callOutOfficial").value;
+  const off      = findOfficial(group, offId);
+  const date     = el("callOutDate").value;
+  const start    = el("callOutStart").value;
+  const end      = el("callOutEnd").value;
+  const notes    = el("callOutNotes").value.trim();
+
+  if (!off || !date) { showMsg("reportMessage","Choose an official and date.","error"); return; }
+
+  let removed = 0;
+  (group.games||[]).forEach(game => {
+    if (gameInCallOutWindow(game, date, start, end)) removed += removeOfficialFromGame(game, offId);
+  });
+  const blockAdded = addCallOutBlock(off, date, start, end, notes);
+
+  group.reports.unshift({
+    id: makeId(), groupId: group.id,
+    reportType: "official_call_out",
+    title: `${off.name} called out`,
+    details: [`Date: ${date}`, `Time: ${[start||"Any time",end||""].filter(Boolean).join("–")}`, `Assignments removed: ${removed}`, blockAdded?"Block added":"Block already existed", notes ? "Notes: "+notes : ""].filter(Boolean).join(" | "),
+    officialId: offId, date, start, end, removedAssignments: removed,
+    createdAt: new Date().toISOString()
+  });
+
+  updateGroups();
+  e.target.reset();
+  showMsg("reportMessage",`Call out saved. Removed ${removed} assignment${removed===1?"":"s"}.`,"success");
+});
+
+// Close modals on backdrop click
+document.querySelectorAll(".modal").forEach(modal => {
+  modal.addEventListener("click", e => {
+    if (e.target === modal) modal.classList.remove("open");
+  });
+});
+</script>
+</body>
+</html>
