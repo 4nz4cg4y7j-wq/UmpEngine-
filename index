@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Officials Engine | Smart Sports Officiating Software</title>
+  <style>
+    :root {
+      --bg: #020913;
+      --panel: #061a2d;
+      --line: rgba(134,188,255,0.32);
+      --text: #f7fbff;
+      --muted: #d9e6f7;
+      --blue: #2478ff;
+      --blue-2: #0f58d9;
+      --green: #57d980;
+      --violet: #9663ff;
+      --shadow: 0 24px 80px rgba(0,0,0,0.44);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(36,120,255,0.22), transparent 38rem),
+        radial-gradient(circle at 88% 12%, rgba(150,99,255,0.16), transparent 32rem),
+        var(--bg);
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid rgba(100,164,255,0.12);
+      background: rgba(2,9,19,0.92);
+      backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .nav {
+      width: min(100% - 40px, 1220px);
+      margin: auto;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .logo span { color: var(--blue); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 2.4vw, 34px);
+      font-weight: 700;
+    }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-ctas { display: flex; gap: 10px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 42px; padding: 0 20px; border-radius: 8px; border: 1px solid transparent;
+      color: #fff; font-weight: 800; font-family: inherit; font-size: 0.95rem;
+      background: linear-gradient(180deg, var(--blue), var(--blue-2));
+      box-shadow: 0 14px 30px rgba(36,120,255,0.25);
+      cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn.outline {
+      background: rgba(2,9,19,0.45);
+      border-color: rgba(255,255,255,0.55);
+      box-shadow: none;
+    }
+    .btn.lg { min-height: 54px; padding: 0 32px; font-size: 1.05rem; }
+    .btn.ghost { background: rgba(134,188,255,0.08); border-color: rgba(134,188,255,0.22); box-shadow: none; }
+
+    /* ── HERO ── */
+    .hero {
+      width: min(100% - 40px, 1220px);
+      margin: auto;
+      padding: 90px 0 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 12px; border-radius: 999px;
+      border: 1px solid rgba(87,217,128,0.38);
+      background: rgba(87,217,128,0.1);
+      color: var(--green);
+      font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 22px;
+    }
+    .hero-eyebrow::before { content: "●"; font-size: 0.6rem; }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.05;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .hero h1 span { color: var(--blue); }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 480px;
+      margin-bottom: 36px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 28px; margin-top: 40px;
+      padding-top: 28px; border-top: 1px solid rgba(134,188,255,0.18);
+    }
+    .hero-stat strong { display: block; font-size: 2rem; font-weight: 900; color: #fff; line-height: 1; }
+    .hero-stat span { color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+
+    /* ── DASHBOARD PREVIEW ── */
+    .dashboard-preview {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.38), rgba(3,13,27,0.92)), var(--panel);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .preview-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px;
+      background: rgba(2,9,19,0.6);
+      border-bottom: 1px solid rgba(134,188,255,0.12);
+    }
+    .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .preview-dot.red   { background: #ff5f57; }
+    .preview-dot.amber { background: #febc2e; }
+    .preview-dot.green { background: #28c840; }
+    .preview-title { margin-left: 8px; font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+    .preview-body { padding: 20px; display: grid; gap: 12px; }
+    .preview-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+    .preview-metric {
+      padding: 12px;
+      border: 1px solid rgba(134,188,255,0.18);
+      border-radius: 8px;
+      background: rgba(2,9,19,0.5);
+    }
+    .preview-metric strong { display: block; font-size: 1.4rem; font-weight: 900; }
+    .preview-metric span { font-size: 0.72rem; color: var(--muted); font-weight: 700; }
+    .preview-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid rgba(134,188,255,0.14);
+      border-radius: 8px;
+      background: rgba(2,9,19,0.4);
+      font-size: 0.82rem;
+    }
+    .preview-row-label { color: var(--muted); }
+    .preview-pill {
+      padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
+    }
+    .preview-pill.green { background: rgba(87,217,128,0.18); color: var(--green); border: 1px solid rgba(87,217,128,0.3); }
+    .preview-pill.blue  { background: rgba(36,120,255,0.18); color: #8fc2ff;      border: 1px solid rgba(36,120,255,0.3); }
+
+    /* ── SECTION WRAPPER ── */
+    .section { width: min(100% - 40px, 1220px); margin: auto; padding: 80px 0; }
+    .section-label {
+      text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.82rem; font-weight: 800;
+      color: var(--blue); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+    .section-title span { color: var(--blue); }
+    .section-sub { color: var(--muted); line-height: 1.65; max-width: 580px; font-size: 1.05rem; }
+    .section-divider { border: 0; border-top: 1px solid rgba(134,188,255,0.14); margin: 0; }
+
+    /* ── FEATURES ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 50px; }
+    .feature-card {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.32), rgba(3,13,27,0.9)), var(--panel);
+      box-shadow: var(--shadow);
+      transition: border-color 0.18s, transform 0.18s;
+    }
+    .feature-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(36,120,255,0.16);
+      border: 1px solid rgba(36,120,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+    .feature-card p { color: var(--muted); font-size: 0.93rem; line-height: 1.55; }
+
+    /* ── HOW IT WORKS ── */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 18px;
+      margin-top: 50px;
+      counter-reset: steps;
+    }
+    .how-card {
+      position: relative;
+      padding: 28px;
+      border: 1px solid rgba(134,188,255,0.22);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(36,120,255,0.08), rgba(3,13,27,0.88)), var(--panel);
+      counter-increment: steps;
+    }
+    .how-card::before {
+      content: counter(steps, decimal-leading-zero);
+      display: block;
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: rgba(36,120,255,0.3);
+      line-height: 1;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+    .how-card h3 { font-size: 1rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+    .how-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+
+    /* ── PRICING ── */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 50px; }
+    .pricing-card {
+      padding: 32px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(22,58,98,0.32), rgba(3,13,27,0.9)), var(--panel);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .pricing-card.featured {
+      border-color: var(--blue);
+      background: linear-gradient(145deg, rgba(36,120,255,0.22), rgba(3,13,27,0.96)), var(--panel);
+      position: relative;
+    }
+    .pricing-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      padding: 4px 16px; border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--violet));
+      font-size: 0.78rem; font-weight: 900; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .pricing-name { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
+    .pricing-amount strong { font-size: 3rem; font-weight: 900; line-height: 1; }
+    .pricing-amount span { color: var(--muted); font-size: 0.9rem; }
+    .pricing-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+    .pricing-features { display: grid; gap: 10px; }
+    .pricing-feature {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.9rem; color: var(--muted); line-height: 1.4;
+    }
+    .pricing-feature::before { content: "✓"; color: var(--green); font-weight: 900; flex-shrink: 0; }
+    .pricing-cta { margin-top: auto; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonial-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 50px; }
+    .testimonial-card {
+      padding: 28px;
+      border: 1px solid rgba(134,188,255,0.18);
+      border-radius: 14px;
+      background: rgba(6,26,45,0.6);
+    }
+    .testimonial-quote { font-size: 0.95rem; color: var(--muted); line-height: 1.65; margin-bottom: 20px; font-style: italic; }
+    .testimonial-author strong { display: block; font-size: 0.9rem; font-weight: 900; }
+    .testimonial-author span { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── CTA BANNER ── */
+    .cta-banner {
+      margin: 0 auto 80px;
+      width: min(100% - 40px, 1220px);
+      padding: 60px 50px;
+      border: 1px solid rgba(36,120,255,0.38);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 10% 50%, rgba(36,120,255,0.22), transparent 24rem),
+        radial-gradient(circle at 88% 40%, rgba(150,99,255,0.16), transparent 22rem),
+        linear-gradient(145deg, rgba(22,58,98,0.48), rgba(3,13,27,0.96)), var(--panel);
+      text-align: center;
+    }
+    .cta-banner h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 900; text-transform: uppercase; margin-bottom: 14px; }
+    .cta-banner h2 span { color: var(--blue); }
+    .cta-banner p { color: var(--muted); font-size: 1.05rem; max-width: 540px; margin: 0 auto 32px; line-height: 1.6; }
+    .cta-banner-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(100,164,255,0.12);
+      background: rgba(2,9,19,0.96);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      width: min(100% - 40px, 1220px);
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a { font-size: 0.88rem; color: var(--muted); font-weight: 700; }
+    .footer-links a:hover { color: var(--blue); }
+    .footer-copy { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1000px) {
+      .hero { grid-template-columns: 1fr; padding: 60px 0; gap: 40px; }
+      .dashboard-preview { display: none; }
+      .features-grid, .how-grid, .pricing-grid, .testimonial-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .features-grid, .how-grid, .pricing-grid, .testimonial-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .preview-metrics { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="logo" href="index.html">Officials <span>Engine</span></a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav-ctas">
+      <a class="btn outline" href="login.html">Log In</a>
+      <a class="btn" href="register.html">Get Started Free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">Now in public beta</div>
+      <h1>Officiating <span>Assignments</span> Done Right</h1>
+      <p>Officials Engine automates the hardest part of running a tournament or league — getting the right officials to the right games, every time.</p>
+      <div class="hero-actions">
+        <a class="btn lg" href="register.html">Start for Free</a>
+        <a class="btn lg outline" href="#features">See How It Works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>10k+</strong><span>Games assigned</span></div>
+        <div class="hero-stat"><strong>400+</strong><span>Assigners</span></div>
+        <div class="hero-stat"><strong>98%</strong><span>Fill rate</span></div>
+      </div>
+    </div>
+
+    <div class="dashboard-preview">
+      <div class="preview-bar">
+        <div class="preview-dot red"></div>
+        <div class="preview-dot amber"></div>
+        <div class="preview-dot green"></div>
+        <span class="preview-title">Officials Engine — Dashboard</span>
+      </div>
+      <div class="preview-body">
+        <div class="preview-metrics">
+          <div class="preview-metric"><strong>4</strong><span>Groups</span></div>
+          <div class="preview-metric"><strong>128</strong><span>Games</span></div>
+          <div class="preview-metric"><strong>34</strong><span>Officials</span></div>
+          <div class="preview-metric"><strong>6</strong><span>Awaiting</span></div>
+        </div>
+        <div class="preview-row">
+          <span>Field 1 · 9:00 AM · Tigers vs Lions</span>
+          <span class="preview-pill green">✓ Assigned</span>
+        </div>
+        <div class="preview-row">
+          <span>Field 2 · 9:00 AM · Hawks vs Storm</span>
+          <span class="preview-pill green">✓ Assigned</span>
+        </div>
+        <div class="preview-row">
+          <span>Field 3 · 10:30 AM · Eagles vs Bulls</span>
+          <span class="preview-pill blue">1/2 assigned</span>
+        </div>
+        <div class="preview-row">
+          <span>Field 1 · 11:00 AM · Finals — Div A</span>
+          <span class="preview-pill green">✓ Assigned</span>
+        </div>
+        <div class="preview-row">
+          <span>Field 4 · 1:00 PM · Semis — Div B</span>
+          <span class="preview-pill blue">Needs: Plate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <p class="section-label">Core Features</p>
+    <h2 class="section-title">Everything an assigner <span>needs</span></h2>
+    <p class="section-sub">Built for tournament directors, league coordinators, and assigners who manage real schedules — not theoretical ones.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Auto Assign</h3>
+        <p>Instantly fill your entire schedule based on ratings, availability, rest time, and your assigning philosophy. One click handles what used to take hours.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Schedule View & Export</h3>
+        <p>Review assignments by date and field, print a clean schedule, or export to Excel — formatted and ready to send to officials immediately.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Roster Management</h3>
+        <p>Track each official's ratings, roles (plate vs. bases), availability blocks, and contact info. Your whole roster in one place.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Bulk Game Import</h3>
+        <p>Paste schedules from Tourney Machine, GameChanger, or any tab or comma-separated format. Officials Engine parses dates, times, fields, and teams automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Call Out & Reassign</h3>
+        <p>When an official cancels, mark them out for a time window and Officials Engine removes their assignments and flags openings instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Conflict Detection</h3>
+        <p>Never double-book an official again. Real-time checks prevent overlapping assignments, unavailable blocks, and games at the same time.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <p class="section-label">How It Works</p>
+    <h2 class="section-title">Up and assigning in <span>minutes</span></h2>
+    <p class="section-sub">No training required. If you can copy and paste a schedule, you can run Officials Engine.</p>
+    <div class="how-grid">
+      <div class="how-card">
+        <h3>Create a Group</h3>
+        <p>Set up a group for your tournament, season, or league. Name it, set the sport, add divisions with their game durations and official counts.</p>
+      </div>
+      <div class="how-card">
+        <h3>Add Officials & Import Games</h3>
+        <p>Add your officiating roster with ratings and availability. Paste your schedule from any source — Officials Engine handles the parsing.</p>
+      </div>
+      <div class="how-card">
+        <h3>Run Auto Assign</h3>
+        <p>Hit Auto Assign. Adjust your philosophy — balanced, best officials first, develop newer refs — and Officials Engine fills every slot intelligently.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- PRICING PREVIEW -->
+  <section class="section" id="pricing">
+    <p class="section-label">Pricing</p>
+    <h2 class="section-title">Simple, transparent <span>plans</span></h2>
+    <p class="section-sub">Start free. Upgrade when your operation grows. No per-game fees, no surprise charges.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div>
+          <p class="pricing-name">Starter</p>
+          <div class="pricing-amount"><strong>Free</strong></div>
+          <p class="pricing-desc">For individual assigners running one group at a time.</p>
+        </div>
+        <div class="pricing-features">
+          <div class="pricing-feature">1 active group</div>
+          <div class="pricing-feature">Up to 50 games</div>
+          <div class="pricing-feature">Up to 15 officials</div>
+          <div class="pricing-feature">Auto Assign</div>
+          <div class="pricing-feature">PDF &amp; Excel export</div>
+        </div>
+        <div class="pricing-cta">
+          <a class="btn outline" href="register.html" style="width:100%; justify-content:center;">Get Started Free</a>
+        </div>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Most Popular</div>
+        <div>
+          <p class="pricing-name">Pro</p>
+          <div class="pricing-amount"><strong>$29</strong><span> / month</span></div>
+          <p class="pricing-desc">For active assigners managing multiple tournaments or leagues.</p>
+        </div>
+        <div class="pricing-features">
+          <div class="pricing-feature">Unlimited groups</div>
+          <div class="pricing-feature">Unlimited games</div>
+          <div class="pricing-feature">Unlimited officials</div>
+          <div class="pricing-feature">Advanced Auto Assign preferences</div>
+          <div class="pricing-feature">Call-out log &amp; reassignment</div>
+          <div class="pricing-feature">Priority support</div>
+        </div>
+        <div class="pricing-cta">
+          <a class="btn" href="register.html" style="width:100%; justify-content:center;">Start Pro Trial</a>
+        </div>
+      </div>
+
+      <div class="pricing-card">
+        <div>
+          <p class="pricing-name">Organization</p>
+          <div class="pricing-amount"><strong>$79</strong><span> / month</span></div>
+          <p class="pricing-desc">For umpire associations and large governing bodies.</p>
+        </div>
+        <div class="pricing-features">
+          <div class="pricing-feature">Everything in Pro</div>
+          <div class="pricing-feature">Multiple assigners per org</div>
+          <div class="pricing-feature">Shared official pool</div>
+          <div class="pricing-feature">Organization-level reporting</div>
+          <div class="pricing-feature">Dedicated onboarding</div>
+          <div class="pricing-feature">Custom branding</div>
+        </div>
+        <div class="pricing-cta">
+          <a class="btn outline" href="payment.html" style="width:100%; justify-content:center;">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- TESTIMONIALS -->
+  <section class="section">
+    <p class="section-label">What Assigners Say</p>
+    <h2 class="section-title">Trusted by <span>real</span> assigners</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <p class="testimonial-quote">"I used to spend four hours on a Saturday morning filling a 60-game schedule. Officials Engine does it in about 45 seconds. That's not an exaggeration."</p>
+        <div class="testimonial-author"><strong>Marcus T.</strong><span>Tournament Director, Florida</span></div>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-quote">"The call-out feature alone is worth it. When an umpire calls out at 6am, I used to be scrambling. Now I click one button and the schedule updates itself."</p>
+        <div class="testimonial-author"><strong>Lisa K.</strong><span>Umpire Assigner, Illinois</span></div>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-quote">"Being able to paste from GameChanger and have it just work — fields, times, teams all parsed correctly — is genuinely impressive. Saves me 30 minutes every single week."</p>
+        <div class="testimonial-author"><strong>David R.</strong><span>League Coordinator, Texas</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <div class="cta-banner">
+    <h2>Ready to run a <span>smarter</span> schedule?</h2>
+    <p>Create your first group free. No credit card required. Your first Auto Assign run takes less than a minute.</p>
+    <div class="cta-banner-actions">
+      <a class="btn lg" href="register.html">Create Free Account</a>
+      <a class="btn lg outline" href="login.html">Log In</a>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <a class="logo" href="index.html">Officials <span>Engine</span></a>
+    <nav class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="login.html">Log In</a>
+      <a href="register.html">Sign Up</a>
+    </nav>
+    <p class="footer-copy">© 2025 Officials Engine. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>
